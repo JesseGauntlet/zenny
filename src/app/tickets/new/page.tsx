@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { createClient } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 
 export default function NewTicketPage() {

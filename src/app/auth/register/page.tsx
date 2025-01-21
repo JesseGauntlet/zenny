@@ -1,35 +1,54 @@
+'use client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { createClient } from '@/lib/supabase'
-import { redirect } from 'next/navigation'
+import { createClient } from '@/utils/supabase/client'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { useState } from 'react'
 
 export default function RegisterPage() {
-  async function register(formData: FormData) {
-    'use server'
-    
-    const email = formData.get('email') as string
-    const password = formData.get('password') as string
-    const name = formData.get('name') as string
-    
-    const supabase = await createClient()
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name,
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [error, setError] = useState<string | null>(searchParams.get('error'))
+  const [isLoading, setIsLoading] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setError(null)
+    setIsLoading(true)
+
+    try {
+      const formData = new FormData(e.currentTarget)
+      const email = formData.get('email') as string
+      const password = formData.get('password') as string
+      const name = formData.get('name') as string
+      
+      const supabase = createClient()
+      
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
-      },
-    })
+      })
 
-    if (error) {
-      return redirect('/auth/register?error=' + error.message)
+      if (error) {
+        setError(error.message)
+        return
+      }
+
+      router.push('/auth/login?message=Please check your email to confirm your account')
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.')
+      console.error('Registration error:', err)
+    } finally {
+      setIsLoading(false)
     }
-
-    return redirect('/auth/login?message=Please check your email to confirm your account')
   }
 
   return (
@@ -39,13 +58,19 @@ export default function RegisterPage() {
         <CardDescription>Create a new account</CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={register} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+              <span className="block sm:inline">{error}</span>
+            </div>
+          )}
           <div className="space-y-2">
             <Input
               type="text"
               name="name"
               placeholder="Full Name"
               required
+              disabled={isLoading}
             />
           </div>
           <div className="space-y-2">
@@ -54,6 +79,7 @@ export default function RegisterPage() {
               name="email"
               placeholder="Email"
               required
+              disabled={isLoading}
             />
           </div>
           <div className="space-y-2">
@@ -62,10 +88,11 @@ export default function RegisterPage() {
               name="password"
               placeholder="Password"
               required
+              disabled={isLoading}
             />
           </div>
-          <Button type="submit" className="w-full">
-            Register
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? 'Creating account...' : 'Register'}
           </Button>
         </form>
       </CardContent>

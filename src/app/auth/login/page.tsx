@@ -1,29 +1,48 @@
+'use client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { createClient } from '@/lib/supabase'
-import { redirect } from 'next/navigation'
+import { createClient } from '@/utils/supabase/client'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { useState } from 'react'
 
 export default function LoginPage() {
-  async function login(formData: FormData) {
-    'use server'
-    
-    const email = formData.get('email') as string
-    const password = formData.get('password') as string
-    
-    const supabase = await createClient()
-    
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [error, setError] = useState<string | null>(searchParams.get('error'))
+  const [isLoading, setIsLoading] = useState(false)
 
-    if (error) {
-      return redirect('/auth/login?error=' + error.message)
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setError(null)
+    setIsLoading(true)
+
+    try {
+      const formData = new FormData(e.currentTarget)
+      const email = formData.get('email') as string
+      const password = formData.get('password') as string
+      
+      const supabase = createClient()
+      
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        setError(error.message)
+        return
+      }
+
+      router.refresh()
+      router.push('/')
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.')
+      console.error('Login error:', err)
+    } finally {
+      setIsLoading(false)
     }
-
-    return redirect('/')
   }
 
   return (
@@ -33,13 +52,24 @@ export default function LoginPage() {
         <CardDescription>Enter your email and password to login</CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={login} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+              <span className="block sm:inline">{error}</span>
+            </div>
+          )}
+          {searchParams.get('message') && (
+            <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded relative" role="alert">
+              <span className="block sm:inline">{searchParams.get('message')}</span>
+            </div>
+          )}
           <div className="space-y-2">
             <Input
               type="email"
               name="email"
               placeholder="Email"
               required
+              disabled={isLoading}
             />
           </div>
           <div className="space-y-2">
@@ -48,10 +78,11 @@ export default function LoginPage() {
               name="password"
               placeholder="Password"
               required
+              disabled={isLoading}
             />
           </div>
-          <Button type="submit" className="w-full">
-            Login
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? 'Logging in...' : 'Login'}
           </Button>
         </form>
       </CardContent>
