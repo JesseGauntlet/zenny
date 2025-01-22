@@ -26,7 +26,7 @@ export default function RegisterPage() {
       
       const supabase = createClient()
       
-      const { error } = await supabase.auth.signUp({
+      const { data: { user }, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -37,15 +37,30 @@ export default function RegisterPage() {
         },
       })
 
-      if (error) {
-        setError(error.message)
-        return
+      if (signUpError) throw signUpError
+      
+      if (user) {
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert([
+            {
+              auth_user_id: user.id,
+              email: user.email,
+              name: name,
+            }
+          ])
+        
+        if (insertError) throw insertError
+        
+        router.push('/auth/verify')
       }
-
-      router.push('/auth/login?message=Please check your email to confirm your account')
-    } catch (err) {
-      setError('An unexpected error occurred. Please try again.')
-      console.error('Registration error:', err)
+    } catch (error: unknown) {
+      console.error('Error during registration:', error)
+      if (error instanceof Error) {
+        setError(error.message)
+      } else {
+        setError('An unexpected error occurred.')
+      }
     } finally {
       setIsLoading(false)
     }

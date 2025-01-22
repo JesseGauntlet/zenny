@@ -1,21 +1,21 @@
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { createClient } from '@/utils/supabase/server'
+import { redirect } from 'next/navigation'
 
-export default function TicketLayout({
+export default async function TicketLayout({
   children,
-  searchParams,
 }: {
   children: React.ReactNode
-  searchParams: { error?: string }
 }) {
+  const supabase = await createClient()
+
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (!session) {
+    redirect('/auth/login')
+  }
+
   return (
     <div>
-      {searchParams.error && (
-        <div className="container mx-auto py-4">
-          <Alert variant="destructive">
-            <AlertDescription>{searchParams.error}</AlertDescription>
-          </Alert>
-        </div>
-      )}
       {children}
     </div>
   )

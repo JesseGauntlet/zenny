@@ -1,0 +1,28 @@
+root = true
+
+Project Structure
+/
+├── .env                    # Production environment variables
+├── .env.local             # Local environment variables
+├── docs/                  # Documentation directory
+│   ├── interfaces.md      # Interface documentation
+│   ├── HLD.md            # High-level design document
+│   └── mvp_checklist.md  # MVP checklist and tasks
+├── src/                   # Source code directory
+│   ├── app/              # Next.js app directory
+│   │   ├── auth/         # Authentication pages
+│   │   └── api/          # API routes
+│   ├── components/       # React components
+│   └── utils/            # Utility functions
+│       └── supabase/     # Supabase client utilities
+├── supabase/             # Supabase configuration
+│   ├── migrations/       # Database migrations
+│   ├── tests.sql        # Test data insertion
+│   ├── init.sql         # Initial schema
+│   ├── enable_rls.sql   # RLS policies
+│   ├── api_tests.sh     # API test scripts
+│   └── config.toml      # Supabase config
+├── types/                # TypeScript type definitions
+│   └── database.types.ts # Generated Supabase types
+├── public/              # Static assets
+└── styles/              # CSS and styling files 

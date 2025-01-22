@@ -35,8 +35,11 @@ export default function LoginPage() {
         return
       }
 
-      router.refresh()
-      router.push('/')
+      const user = await supabase.auth.getUser()
+
+      if (user) {
+        router.push('/')
+      }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.')
       console.error('Login error:', err)

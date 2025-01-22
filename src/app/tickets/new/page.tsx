@@ -1,95 +1,121 @@
+'use client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { createClient } from '@/utils/supabase/client'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { createClient } from '@/utils/supabase/server'
-import { redirect } from 'next/navigation'
+} from "@/components/ui/select"
 
 export default function NewTicketPage() {
-  async function createTicket(formData: FormData) {
-    'use server'
-    
-    const supabase = await createClient()
-    
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
-      return redirect('/auth/login')
+  const router = useRouter()
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setError(null)
+    setIsLoading(true)
+
+    try {
+      const formData = new FormData(e.currentTarget)
+      const subject = formData.get('subject') as string
+      const description = formData.get('description') as string
+      const priority = formData.get('priority') as string
+      
+      const supabase = createClient()
+
+      // Get the current user's ID
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) throw new Error('Not authenticated')
+
+      const { error: insertError } = await supabase
+        .from('tickets')
+        .insert([
+          {
+            subject,
+            description,
+            priority,
+            customer_id: user.id,
+            status: 'open'
+          }
+        ])
+
+      if (insertError) throw insertError
+
+      router.push('/')
+      router.refresh()
+    } catch (error) {
+      console.error('Error creating ticket:', error)
+      setError(error instanceof Error ? error.message : 'Error creating ticket')
+    } finally {
+      setIsLoading(false)
     }
-
-    const { error } = await supabase
-      .from('tickets')
-      .insert({
-        subject: formData.get('subject'),
-        description: formData.get('description'),
-        priority: formData.get('priority'),
-        customer_id: session.user.id,
-      })
-
-    if (error) {
-      return redirect('/tickets/new?error=' + error.message)
-    }
-
-    return redirect('/')
   }
 
   return (
     <div className="container mx-auto py-10">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Create New Ticket</h1>
+      <h1 className="text-3xl font-bold mb-8">Create New Ticket</h1>
+      
+      <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
         
-        <form action={createTicket} className="space-y-6">
-          <div className="space-y-2">
-            <label htmlFor="subject" className="text-sm font-medium">
-              Subject
-            </label>
-            <Input
-              id="subject"
-              name="subject"
-              placeholder="Brief description of your issue"
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="description" className="text-sm font-medium">
-              Description
-            </label>
-            <Textarea
-              id="description"
-              name="description"
-              placeholder="Detailed explanation of your issue"
-              required
-              rows={5}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="priority" className="text-sm font-medium">
-              Priority
-            </label>
-            <Select name="priority" defaultValue="low">
-              <SelectTrigger>
-                <SelectValue placeholder="Select priority" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="space-y-2">
+          <label htmlFor="subject" className="text-sm font-medium">
+            Subject
+          </label>
+          <Input
+            id="subject"
+            name="subject"
+            required
+            disabled={isLoading}
+          />
+        </div>
 
-          <Button type="submit" className="w-full">
-            Create Ticket
-          </Button>
-        </form>
-      </div>
+        <div className="space-y-2">
+          <label htmlFor="description" className="text-sm font-medium">
+            Description
+          </label>
+          <Textarea
+            id="description"
+            name="description"
+            required
+            disabled={isLoading}
+            rows={4}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="priority" className="text-sm font-medium">
+            Priority
+          </label>
+          <Select name="priority" defaultValue="low">
+            <SelectTrigger>
+              <SelectValue placeholder="Select priority" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="low">Low</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="high">High</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? 'Creating...' : 'Create Ticket'}
+        </Button>
+      </form>
     </div>
   )
 } 
