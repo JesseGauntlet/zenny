@@ -1,4 +1,5 @@
 root = true
+In order to prevent typing errors, references the /types directory for all type definitions.
 
 Project Structure
 /
@@ -17,9 +18,6 @@ Project Structure
 │       └── supabase/     # Supabase client utilities
 ├── supabase/             # Supabase configuration
 │   ├── migrations/       # Database migrations
-│   ├── tests.sql        # Test data insertion
-│   ├── init.sql         # Initial schema
-│   ├── enable_rls.sql   # RLS policies
 │   ├── api_tests.sh     # API test scripts
 │   └── config.toml      # Supabase config
 ├── types/                # TypeScript type definitions

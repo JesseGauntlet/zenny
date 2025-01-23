@@ -27,7 +27,7 @@ export default function NewTicketPage() {
       const formData = new FormData(e.currentTarget)
       const subject = formData.get('subject') as string
       const description = formData.get('description') as string
-      const priority = formData.get('priority') as string
+      const priority = formData.get('priority') as 'low' | 'medium' | 'high'
       
       const supabase = createClient()
 
@@ -35,6 +35,15 @@ export default function NewTicketPage() {
       const { data: { user } } = await supabase.auth.getUser()
       
       if (!user) throw new Error('Not authenticated')
+
+      // Verify the user is a customer
+      const { data: customer } = await supabase
+        .from('customers')
+        .select()
+        .eq('id', user.id)
+        .single()
+
+      if (!customer) throw new Error('Not authorized as a customer')
 
       const { error: insertError } = await supabase
         .from('tickets')

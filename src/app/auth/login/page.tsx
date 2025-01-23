@@ -25,20 +25,39 @@ export default function LoginPage() {
       
       const supabase = createClient()
       
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      if (error) {
-        setError(error.message)
+      if (signInError) {
+        setError(signInError.message)
         return
       }
 
-      const user = await supabase.auth.getUser()
+      const { data: { user } } = await supabase.auth.getUser()
 
       if (user) {
-        router.push('/')
+        // Check if user is a customer or employee
+        const { data: customer } = await supabase
+          .from('customers')
+          .select()
+          .eq('id', user.id)
+          .single()
+
+        const { data: employee } = await supabase
+          .from('employees')
+          .select()
+          .eq('id', user.id)
+          .single()
+
+        if (customer) {
+          router.push('/')
+        } else if (employee) {
+          router.push('/dashboard/agent')
+        } else {
+          router.push('/auth/unauthorized')
+        }
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.')

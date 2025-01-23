@@ -13,25 +13,56 @@ export default async function DashboardPage() {
     redirect('/auth/login')
   }
 
-  // Get tickets with customer information
+  // Check if user is a customer
+  const { data: customer } = await supabase
+    .from('customers')
+    .select()
+    .eq('id', session.user.id)
+    .single()
+
+  // Check if user is an employee
+  const { data: employee } = await supabase
+    .from('employees')
+    .select()
+    .eq('id', session.user.id)
+    .single()
+
+  if (!customer && !employee) {
+    // User is neither a customer nor an employee
+    return (
+      <div className="container mx-auto py-10">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold mb-4">Access Denied</h1>
+          <p className="text-muted-foreground mb-4">You are not authorized to access this system.</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Get tickets based on role
   const { data: tickets } = await supabase
     .from('tickets')
     .select(`
       *,
       customer:customer_id (
-        name,
-        email
+        name
       )
     `)
     .order('created_at', { ascending: false })
+    // If customer, only show their tickets
+    .eq(customer ? 'customer_id' : 'assigned_employee_id', session.user.id)
 
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Support Tickets</h1>
-        <Button asChild>
-          <Link href="/tickets/new">New Ticket</Link>
-        </Button>
+        <h1 className="text-3xl font-bold">
+          {customer ? 'My Support Tickets' : 'Assigned Tickets'}
+        </h1>
+        {customer && (
+          <Button asChild>
+            <Link href="/tickets/new">New Ticket</Link>
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-4">
@@ -46,12 +77,15 @@ export default async function DashboardPage() {
                 <h2 className="text-xl font-semibold mb-2">{ticket.subject}</h2>
                 <p className="text-muted-foreground line-clamp-2">{ticket.description}</p>
                 <div className="mt-2 text-sm text-muted-foreground">
-                  Submitted by: {ticket.customer?.name || ticket.customer?.email}
+                  {customer ? 'Ticket ID: ' : 'From: '} 
+                  {customer ? ticket.id : ticket.customer?.name}
                 </div>
               </div>
               <div className="flex flex-col items-end gap-2">
                 <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium
-                  ${ticket.status === 'open' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}
+                  ${ticket.status === 'open' ? 'bg-green-100 text-green-700' : 
+                    ticket.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 
+                    'bg-gray-100 text-gray-700'}`}
                 >
                   {ticket.status}
                 </span>
@@ -72,10 +106,14 @@ export default async function DashboardPage() {
         {(!tickets || tickets.length === 0) && (
           <div className="text-center p-12 border rounded-lg">
             <h3 className="text-lg font-medium mb-2">No tickets yet</h3>
-            <p className="text-muted-foreground mb-4">Create your first ticket to get started</p>
-            <Button asChild>
-              <Link href="/tickets/new">Create Ticket</Link>
-            </Button>
+            <p className="text-muted-foreground mb-4">
+              {customer ? 'Create your first ticket to get started' : 'No tickets assigned to you'}
+            </p>
+            {customer && (
+              <Button asChild>
+                <Link href="/tickets/new">Create Ticket</Link>
+              </Button>
+            )}
           </div>
         )}
       </div>

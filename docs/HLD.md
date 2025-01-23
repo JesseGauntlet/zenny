@@ -4,44 +4,53 @@ Below is a **high-level design** that synthesizes the core requirements into an 
 
 ## 1. Core Entities
 
-1. **User (Customer)**  
-   - Represents the customer creating support tickets.
-   - Has attributes like `name`, `email`, `password`, etc.
-   - Can view, create, and update tickets (within permissions).
+1. **Auth User** (Supabase)
+   - Managed by Supabase Auth
+   - Handles authentication and password management
+   - Has attributes like `id`, `email`, `encrypted_password`
+   - Users can be either customers or employees
 
-2. **Employee (Agent)**  
-   - Represents support agents/staff working on tickets.
-   - Has attributes like `name`, `email`, `role`, etc.
-   - Belongs to one or more **Teams**.
+2. **Customer**  
+   - Links to Supabase Auth User
+   - Represents the customer creating support tickets
+   - Has attributes like `id` (references auth.users), `name`
+   - Can view, create, and update tickets (within permissions)
 
-3. **Team**  
+3. **Employee (Agent)**  
+   - Links to Supabase Auth User
+   - Represents support agents/staff working on tickets
+   - Has attributes like `id` (references auth.users), `name`, `role` (admin/agent)
+   - Belongs to one or more **Teams**
+
+4. **Team**  
    - Groups employees for specific focus areas (e.g., billing, technical support).
    - Has attributes like `name`, `description`, `coverage hours`.
 
-4. **Ticket**  
+5. **Ticket**  
    - Central entity tracking customer inquiries.
    - Attributes include:
      - `id` (unique identifier),
      - `subject`,
      - `description`,
-     - `status` (open, pending, closed, etc.),
-     - `priority`,
+     - `status` (ENUM: open, pending, closed),
+     - `priority` (ENUM: low, medium, high),
      - `created_at`, `updated_at`, `closed_at`,
      - `assigned_to` (references Employee or Team),
-     - `customer_id` (references User),
+     - `customer_id` (references Customer),
      - `metadata` (JSON for flexible schema/extensions).
    - **Full Conversation History** (messages or notes) is associated with the ticket.
 
-5. **Conversation / Message**  
+6. **Conversation / Message**  
    - Stores each communication between a customer and support staff.
    - Attributes:
      - `ticket_id` (reference to Ticket),
      - `sender_id` (could be the customer or an employee),
+     - `sender_type` (ENUM: customer, employee),
      - `content` (rich text),
-     - `attachments`,
+     - `attachments` (JSON),
      - `created_at`, `updated_at`.
 
-6. **Note** (Internal)  
+7. **Note** (Internal)  
    - Internal-only messages tied to a ticket.
    - Attributes:
      - `ticket_id`,
@@ -49,22 +58,30 @@ Below is a **high-level design** that synthesizes the core requirements into an 
      - `content`,
      - `created_at`.
 
-7. **Tag**  
-   - Labels or categories for tickets (e.g., “Billing”, “Urgent”).
+8. **Tag**  
+   - Labels or categories for tickets (e.g., "Billing", "Urgent").
    - M:N relationship with tickets.
 
-8. **Custom Field**  
+9. **Custom Field**  
    - Dynamic fields extending the default schema (e.g., product version, environment info).
    - Could store metadata in a flexible JSON column or a separate table keyed by `field_name`, `value`.
 
-9. **Audit Log**  
+10. **Audit Log**  
    - Tracks changes and critical actions (e.g., ticket status changes, assignment changes).
+   - Attributes:
+     - `entity_type` (what type of record was changed),
+     - `entity_id` (which record was changed),
+     - `action` (what happened),
+     - `changed_data` (JSON of changes),
+     - `actor_id` (who made the change),
+     - `actor_type` (ENUM: customer, employee),
+     - `created_at`.
 
 ---
 
 ## 2. API Routes (Example REST Endpoints)
 
-These routes are illustrative and can be refined based on the project’s exact requirements:
+These routes are illustrative and can be refined based on the project's exact requirements:
 
 ### Tickets
 - **GET** `/tickets`  
@@ -135,16 +152,23 @@ These routes are illustrative and can be refined based on the project’s exact 
 
 ## 3. Proposed Database Schema (Relational Example)
 
-Below is a simplified conceptual schema. Depending on the technology stack, you could adapt it to a NoSQL or hybrid approach.  
+Below is a simplified conceptual schema, integrated with Supabase Auth:
 
 ```
 ┌─────────────────────────┐
-│       users             │
+│       auth.users        │
 ├─────────────────────────┤
 │ id (PK)                 │
-│ name                    │
 │ email                   │
-│ password_hash           │
+│ encrypted_password      │
+│ ... (other auth fields) │
+└─────────────────────────┘
+
+┌─────────────────────────┐
+│       customers         │
+├─────────────────────────┤
+│ id (PK, FK → auth.users.id) │
+│ name                    │
 │ created_at              │
 │ updated_at              │
 └─────────────────────────┘
@@ -152,10 +176,9 @@ Below is a simplified conceptual schema. Depending on the technology stack, you 
 ┌─────────────────────────┐
 │     employees           │
 ├─────────────────────────┤
-│ id (PK)                 │
+│ id (PK, FK → auth.users.id) │
 │ name                    │
 │ email                   │
-│ password_hash           │
 │ role (admin, agent)     │
 │ created_at              │
 │ updated_at              │
@@ -188,7 +211,7 @@ Below is a simplified conceptual schema. Depending on the technology stack, you 
 │ description             │
 │ status (FK to statuses) │
 │ priority (FK to priorities)    │
-│ customer_id (FK → users.id)    │
+│ customer_id (FK → customers.id)    │
 │ assigned_employee_id (FK → employees.id) (nullable) │
 │ assigned_team_id (FK → teams.id) (nullable)         │
 │ metadata (JSON or text) │
@@ -272,7 +295,7 @@ Below is a simplified conceptual schema. Depending on the technology stack, you 
 
 ## 4. Application Diagram
 
-Below is a conceptual diagram of the system’s major components and interactions:
+Below is a conceptual diagram of the system's major components and interactions:
 
 ```
          ┌───────────────────────────┐
@@ -333,20 +356,20 @@ Below is a simplified flow for a **ticket creation** and subsequent **resolution
 
 1. **Customer Action**  
    - A customer visits the Customer Portal or sends an email to support.
-   - If via Portal/Widget, they fill out a “New Ticket” form.
+   - If via Portal/Widget, they fill out a "New Ticket" form.
 
 2. **API Request**  
-   - The request hits `POST /tickets` with the customer’s details and issue description.
+   - The request hits `POST /tickets` with the customer's details and issue description.
    - The API layer authenticates (if required) and validates the request.
 
 3. **Database Operations**  
    - A new record is created in the `tickets` table.
-   - Audit log entry is created (e.g., “Ticket Created”).
+   - Audit log entry is created (e.g., "Ticket Created").
    - If there are rules for auto-tagging or auto-assignment (e.g., AI or rule-based), those are invoked here.
 
 4. **Queue & Notification**  
    - The system checks for assignment rules (by priority, skill, load-balancing).
-   - If assigned, an “assignment” message is added to the ticket or triggers a Slack/email notification to the assigned agent.
+   - If assigned, an "assignment" message is added to the ticket or triggers a Slack/email notification to the assigned agent.
 
 5. **Employee Interface**  
    - The assigned agent sees the new ticket in their queue.
@@ -357,7 +380,7 @@ Below is a simplified flow for a **ticket creation** and subsequent **resolution
    - The conversation continues until resolution.
 
 7. **Ticket Resolution**  
-   - Agent changes ticket `status` to “Closed” or “Resolved”.
+   - Agent changes ticket `status` to "Closed" or "Resolved".
    - A final feedback message or rating prompt is sent to the customer.
 
 8. **Archival & Analytics**  
