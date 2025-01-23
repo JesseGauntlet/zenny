@@ -30,13 +30,11 @@ CREATE POLICY "Allow trigger to create customer profiles"
     ON customers FOR INSERT
     WITH CHECK (true);
 
-CREATE POLICY "Customers can view their own profile"
+-- Basic SELECT policies for customers table
+CREATE POLICY "Authenticated users can view customers"
     ON customers FOR SELECT
-    USING (auth.uid() = id);
-
-CREATE POLICY "Employees can view all customers"
-    ON customers FOR SELECT
-    USING (is_employee(auth.uid()));
+    TO authenticated
+    USING (true);
 
 CREATE POLICY "Customers can update their own profile"
     ON customers FOR UPDATE
@@ -54,9 +52,11 @@ CREATE POLICY "Allow trigger to create employee profiles"
     ON employees FOR INSERT
     WITH CHECK (true);
 
-CREATE POLICY "Employees can view other employees"
+-- Basic SELECT policies for employees table
+CREATE POLICY "Authenticated users can view employees"
     ON employees FOR SELECT
-    USING (is_employee(auth.uid()));
+    TO authenticated
+    USING (true);
 
 CREATE POLICY "Admins can manage employees"
     ON employees FOR ALL
@@ -180,8 +180,3 @@ CREATE POLICY "Employees can view all audit logs"
 CREATE POLICY "System can create audit logs"
     ON audit_logs FOR INSERT
     WITH CHECK (true); 
-
--- Allow users to read their own customer record
-CREATE POLICY "Users can view own customer record"
-ON customers FOR SELECT
-USING (auth.uid() = id);

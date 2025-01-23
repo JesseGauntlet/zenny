@@ -6,41 +6,67 @@ import { redirect } from 'next/navigation'
 export default async function DashboardPage() {
   const supabase = await createClient()
 
-  // Check if user is authenticated
-  const { data: { session } } = await supabase.auth.getSession()
+  // Get authenticated user
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
   
-  if (!session) {
+  console.log('Auth check:', { userId: user?.id, userError })
+  
+  if (!user || userError) {
     redirect('/auth/login')
   }
 
   // Check if user is a customer
-  const { data: customer } = await supabase
+  const { data: customer, error: customerError } = await supabase
     .from('customers')
     .select()
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single()
+
+  console.log('Customer check:', { 
+    userId: user.id,
+    customer: customer?.id,
+    error: customerError
+  })
 
   // Check if user is an employee
-  const { data: employee } = await supabase
+  const { data: employee, error: employeeError } = await supabase
     .from('employees')
     .select()
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single()
 
+  console.log('Employee check:', {
+    userId: user.id,
+    employee: employee?.id,
+    error: employeeError
+  })
+
   if (!customer && !employee) {
+    console.log('Access denied:', {
+      hasCustomer: !!customer,
+      hasEmployee: !!employee,
+      customerError,
+      employeeError
+    })
     // User is neither a customer nor an employee
     return (
       <div className="container mx-auto py-10">
         <div className="text-center">
           <h1 className="text-3xl font-bold mb-4">Access Denied</h1>
           <p className="text-muted-foreground mb-4">You are not authorized to access this system.</p>
+          <pre className="text-sm text-red-500 mt-4">
+            {JSON.stringify({
+              customerError: customerError?.message,
+              employeeError: employeeError?.message
+            }, null, 2)}
+          </pre>
         </div>
       </div>
     )
   }
 
   // Get tickets based on role
-  const { data: tickets } = await supabase
+  const { data: tickets, error: ticketsError } = await supabase
     .from('tickets')
     .select(`
       *,
@@ -50,7 +76,12 @@ export default async function DashboardPage() {
     `)
     .order('created_at', { ascending: false })
     // If customer, only show their tickets
-    .eq(customer ? 'customer_id' : 'assigned_employee_id', session.user.id)
+    .eq(customer ? 'customer_id' : 'assigned_employee_id', user.id)
+
+  console.log('Tickets fetch:', {
+    count: tickets?.length,
+    error: ticketsError
+  })
 
   return (
     <div className="container mx-auto py-10">

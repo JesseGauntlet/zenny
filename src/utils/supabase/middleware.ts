@@ -1,6 +1,15 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+// Define public routes that don't require authentication
+const publicRoutes = [
+  '/auth/login',
+  '/auth/register',
+  '/auth/callback',
+  '/auth/reset-password',
+  '/auth/unauthorized', // Add unauthorized to public routes
+]
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -27,37 +36,74 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // IMPORTANT: Avoid writing any logic between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
+  // Check if the route is public
+  const isPublicRoute = publicRoutes.some(route => 
+    request.nextUrl.pathname.startsWith(route)
+  )
 
+  // Get the user
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (
-    !user &&
-    !request.nextUrl.pathname.startsWith('/auth/login') &&
-    !request.nextUrl.pathname.startsWith('/auth')
-  ) {
-    // no user, redirect to the login page
+  // Allow access to public routes regardless of auth status
+  if (isPublicRoute) {
+    return supabaseResponse
+  }
+
+  // If no user and not a public route, redirect to login
+  if (!user) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
     return NextResponse.redirect(url)
   }
 
-  // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
-  // creating a new response object with NextResponse.next() make sure to:
-  // 1. Pass the request in it, like so:
-  //    const myNewResponse = NextResponse.next({ request })
-  // 2. Copy over the cookies, like so:
-  //    myNewResponse.cookies.setAll(supabaseResponse.cookies.getAll())
-  // 3. Change the myNewResponse object to fit your needs, but avoid changing
-  //    the cookies!
-  // 4. Finally:
-  //    return myNewResponse
-  // If this is not done, you may be causing the browser and server to go out
-  // of sync and terminate the user's session prematurely!
+  // For authenticated routes, verify user has a valid role
+  if (!isPublicRoute) {
+    try {
+      // Check if user exists in customers table
+      const { data: customer, error: customerError } = await supabase
+        .from('customers')
+        .select('id')
+        .eq('id', user.id)
+        .single()
+
+      if (customerError && customerError.code !== 'PGRST116') { // PGRST116 is "not found" error
+        console.error('Error checking customer:', customerError)
+        return supabaseResponse // Allow access if query fails
+      }
+
+      // If customer exists, allow access
+      if (customer) {
+        return supabaseResponse
+      }
+
+      // Check if user exists in employees table
+      const { data: employee, error: employeeError } = await supabase
+        .from('employees')
+        .select('id')
+        .eq('id', user.id)
+        .single()
+
+      if (employeeError && employeeError.code !== 'PGRST116') {
+        console.error('Error checking employee:', employeeError)
+        return supabaseResponse // Allow access if query fails
+      }
+
+      // If employee exists, allow access
+      if (employee) {
+        return supabaseResponse
+      }
+
+      // If user is not in either table, redirect to unauthorized
+      const url = request.nextUrl.clone()
+      url.pathname = '/auth/unauthorized'
+      return NextResponse.redirect(url)
+    } catch (error) {
+      console.error('Error in role check:', error)
+      return supabaseResponse // Allow access if check fails
+    }
+  }
 
   return supabaseResponse
 }
