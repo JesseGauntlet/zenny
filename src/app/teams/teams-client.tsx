@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button'
 export interface Team {
   id: string
   name: string
-  description: string
+  description: string | null
   coverage_hours?: Record<string, { start: string; end: string }>
   created_at?: string
   updated_at?: string

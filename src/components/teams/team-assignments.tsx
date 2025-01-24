@@ -17,7 +17,7 @@ interface Employee {
 interface Team {
   id: string
   name: string
-  description: string
+  description: string | null
 }
 
 interface TeamAssignmentsProps {
@@ -31,39 +31,39 @@ export function TeamAssignments({ team }: TeamAssignmentsProps) {
   const [open, setOpen] = useState(false)
   const supabase = createClient()
 
-  useEffect(() => {
-    async function loadTeamMembers() {
-      setIsLoading(true)
-      try {
-        // Get all employees
-        const { data: allEmployees, error: employeesError } = await supabase
-          .from('employees')
-          .select('*')
-        
-        if (employeesError) throw employeesError
+  async function loadTeamMembers() {
+    setIsLoading(true)
+    try {
+      // Get all employees
+      const { data: allEmployees, error: employeesError } = await supabase
+        .from('employees')
+        .select('*')
+      
+      if (employeesError) throw employeesError
 
-        // Get current team members
-        const { data: teamMembers, error: teamError } = await supabase
-          .from('employees_teams')
-          .select('employee_id')
-          .eq('team_id', team.id)
+      // Get current team members
+      const { data: teamMembers, error: teamError } = await supabase
+        .from('employees_teams')
+        .select('employee_id')
+        .eq('team_id', team.id)
 
-        if (teamError) throw teamError
+      if (teamError) throw teamError
 
-        // Set the employees and selected members
-        setEmployees(allEmployees || [])
-        setSelectedEmployees(new Set(teamMembers?.map(tm => tm.employee_id)))
-      } catch (error) {
-        console.error('Error loading team members:', error)
-      } finally {
-        setIsLoading(false)
-      }
+      // Set the employees and selected members
+      setEmployees(allEmployees || [])
+      setSelectedEmployees(new Set(teamMembers?.map(tm => tm.employee_id)))
+    } catch (error) {
+      console.error('Error loading team members:', error)
+    } finally {
+      setIsLoading(false)
     }
+  }
 
+  useEffect(() => {
     if (open) {
       loadTeamMembers()
     }
-  }, [open, team.id, supabase])
+  }, [open, team.id])
 
   async function handleSubmit() {
     try {

@@ -52,7 +52,12 @@ export function TeamList({ teams }: TeamListProps) {
               </TableCell>
               <TableCell className="text-right space-x-2">
                 <ManageTeamMembersDialog team={team} />
-                <EditTeamDialog team={team} />
+                <EditTeamDialog 
+                  team={team} 
+                  onTeamUpdated={() => {
+                    // Refresh will be handled by the parent component
+                  }} 
+                />
               </TableCell>
             </TableRow>
           ))}

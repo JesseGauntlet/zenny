@@ -12,7 +12,7 @@ interface Employee {
 interface Team {
   id: string
   name: string
-  description: string
+  description: string | null
   members: Array<{
     employee: Employee
   }>
@@ -98,7 +98,7 @@ export default async function MyTeamPage() {
       <Card>
         <CardHeader>
           <CardTitle>{team.name}</CardTitle>
-          <CardDescription>{team.description}</CardDescription>
+          <CardDescription>{team.description || 'No description available'}</CardDescription>
         </CardHeader>
       </Card>
 
