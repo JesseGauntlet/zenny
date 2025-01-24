@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { formatDistanceToNow } from 'date-fns'
 import { TicketMessages } from '@/components/tickets/ticket-messages'
+import { TicketNotesPanel } from '@/components/tickets/ticket-notes-panel'
 import { Database } from '@/types/database.types'
 
 interface PageProps {
@@ -69,6 +70,24 @@ export default async function TicketPage({ params }: PageProps) {
       : employeeMap.get(message.sender_id)
   })) || [];
 
+  // Get ticket notes if user is an employee
+  let notes = []
+  if (employee) {
+    const { data: ticketNotes } = await supabase
+      .from('ticket_notes')
+      .select(`
+        *,
+        employee:employees(
+          name,
+          email
+        )
+      `)
+      .eq('ticket_id', ticketId)
+      .order('created_at', { ascending: true })
+    
+    notes = ticketNotes || []
+  }
+
   return (
     <div className="container max-w-4xl py-8 space-y-8">
       <div className="flex justify-between items-start">
@@ -82,9 +101,18 @@ export default async function TicketPage({ params }: PageProps) {
           )}
         </div>
         <div className="space-y-2">
-          <Link href="/tickets">
-            <Button variant="outline">Back to Tickets</Button>
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/tickets">
+              <Button variant="outline">Back to Tickets</Button>
+            </Link>
+            {employee && (
+              <TicketNotesPanel
+                ticketId={ticket.id}
+                notes={notes}
+                currentUserId={user.id}
+              />
+            )}
+          </div>
           {employee && employees && (
             <form action={assignTicket} className="flex gap-2 mt-4">
               <input type="hidden" name="ticketId" value={ticket.id} />
@@ -108,7 +136,8 @@ export default async function TicketPage({ params }: PageProps) {
         </div>
       </div>
 
-      <div className="border rounded-lg p-6">
+      <div>
+        <h2 className="text-xl font-semibold mb-6">Messages</h2>
         <TicketMessages
           ticketId={ticket.id}
           messages={messages || []}

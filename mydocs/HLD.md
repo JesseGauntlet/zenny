@@ -239,7 +239,7 @@ Below is a simplified conceptual schema, integrated with Supabase Auth:
 ├─────────────────────────┤
 │ id (PK)                 │
 │ ticket_id (FK → tickets.id)     │
-│ author_id (FK → employees.id)   │
+│ employee_id (FK → employees.id)   │
 │ content (text)          │
 │ created_at              │
 │ updated_at              │

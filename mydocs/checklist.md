@@ -24,7 +24,6 @@
 ### Ticket Conversations
 - [x] Build message input UI
 - [x] Add real-time updates for new messages
-- [ ] Implement file attachments (store in Supabase Storage)
 
 ### Internal Notes System
 - [ ] Create ticket_notes table
@@ -71,3 +70,6 @@
 - [ ] Create audit_logs table
 - [ ] Implement logging for key actions
 - [ ] Add audit trail UI
+
+Stretch Goals:
+- [ ] Add file attachments (store in Supabase Storage)
