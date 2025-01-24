@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
-import { RichTextEditor } from '@/components/ui/rich-text-editor'
+import { TiptapEditor } from '@/components/ui/tiptap-editor'
 import { cn } from '@/lib/utils'
 
 type Message = {
@@ -130,8 +130,8 @@ export function TicketMessages({ ticketId, messages: initialMessages, currentUse
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <RichTextEditor
-          value={newMessage}
+        <TiptapEditor
+          content={newMessage}
           onChange={setNewMessage}
           placeholder="Type your message..."
         />

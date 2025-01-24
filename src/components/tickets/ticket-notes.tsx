@@ -5,7 +5,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
-import { RichTextEditor } from '@/components/ui/rich-text-editor'
+import { TiptapEditor } from '@/components/ui/tiptap-editor'
 import { cn } from '@/lib/utils'
 
 type Note = {
@@ -120,8 +120,8 @@ export function TicketNotes({ ticketId, notes: initialNotes, currentUserId }: Ti
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <RichTextEditor
-          value={newNote}
+        <TiptapEditor
+          content={newNote}
           onChange={setNewNote}
           placeholder="Add an internal note..."
         />

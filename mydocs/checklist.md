@@ -26,9 +26,9 @@
 - [x] Add real-time updates for new messages
 
 ### Internal Notes System
-- [ ] Create ticket_notes table
-- [ ] Add notes input UI (visible only to employees)
-- [ ] Implement RLS policies for notes
+- [x] Create ticket_notes table
+- [x] Add notes input UI (visible only to employees)
+- [x] Implement RLS policies for notes
 
 ### Basic Team Structure
 - [ ] Create teams table
