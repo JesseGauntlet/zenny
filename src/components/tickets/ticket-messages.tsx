@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { formatDistanceToNow } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -31,11 +31,54 @@ interface TicketMessagesProps {
   userRole: 'customer' | 'employee'
 }
 
-export function TicketMessages({ ticketId, messages, currentUserId, userRole }: TicketMessagesProps) {
+export function TicketMessages({ ticketId, messages: initialMessages, currentUserId, userRole }: TicketMessagesProps) {
   const [newMessage, setNewMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [messages, setMessages] = useState<Message[]>(initialMessages)
   const router = useRouter()
   const supabase = createClient()
+
+  useEffect(() => {
+    // Subscribe to new messages
+    const channel = supabase
+      .channel('ticket_messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'ticket_messages',
+          filter: `ticket_id=eq.${ticketId}`,
+        },
+        async (payload) => {
+          // Fetch the complete message with sender info based on sender_type
+          const { data: newMessage } = await supabase
+            .from('ticket_messages')
+            .select('*')
+            .eq('id', payload.new.id)
+            .maybeSingle();
+
+          if (newMessage) {
+            // Fetch sender info based on sender_type
+            const { data: senderData } = await supabase
+              .from(newMessage.sender_type === 'customer' ? 'customers' : 'employees')
+              .select('name, email')
+              .eq('id', newMessage.sender_id)
+              .single();
+
+            setMessages(prev => [...prev, {
+              ...newMessage,
+              sender: senderData
+            }])
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [ticketId, supabase])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -60,7 +103,6 @@ export function TicketMessages({ ticketId, messages, currentUserId, userRole }: 
 
     setNewMessage('')
     setIsSubmitting(false)
-    router.refresh()
   }
 
   return (

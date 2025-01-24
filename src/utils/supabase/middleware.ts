@@ -66,7 +66,7 @@ export async function updateSession(request: NextRequest) {
         .from('customers')
         .select('id')
         .eq('id', user.id)
-        .single()
+        // .single()
 
       if (customerError && customerError.code !== 'PGRST116') { // PGRST116 is "not found" error
         console.error('Error checking customer:', customerError)
@@ -83,7 +83,7 @@ export async function updateSession(request: NextRequest) {
         .from('employees')
         .select('id')
         .eq('id', user.id)
-        .single()
+        // .single()
 
       if (employeeError && employeeError.code !== 'PGRST116') {
         console.error('Error checking employee:', employeeError)

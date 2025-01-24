@@ -24,8 +24,8 @@ export default async function TicketPage({ params }: PageProps) {
 
   // Get user's role and profile by checking both customers and employees tables
   const [{ data: customer }, { data: employee }] = await Promise.all([
-    supabase.from('customers').select('*').eq('id', user.id).single(),
-    supabase.from('employees').select('*').eq('id', user.id).single()
+    supabase.from('customers').select('*').eq('id', user.id).maybeSingle(),
+    supabase.from('employees').select('*').eq('id', user.id).maybeSingle()
   ])
 
   // If user is neither a customer nor an employee, redirect to login
@@ -44,28 +44,30 @@ export default async function TicketPage({ params }: PageProps) {
 
   if (!ticket) redirect('/tickets')
 
-  // Get ticket messages with proper sender information
-  const { data: messages } = await supabase
+  // Get ticket messages
+  const { data: rawMessages } = await supabase
     .from('ticket_messages')
-    .select(`
-      *,
-      customer:sender_id(id, name, email),
-      employee:sender_id(id, name, email)
-    `)
+    .select('*')
     .eq('ticket_id', ticketId)
-    .order('created_at', { ascending: true })
-    .then(({ data: messages }) => ({
-      data: messages?.map(message => ({
-        ...message,
-        sender: message.sender_type === 'customer' ? message.customer : message.employee
-      }))
-    }))
+    .order('created_at', { ascending: true });
 
-  // Get all employees for assignment dropdown if current user is an employee
-  const { data: employees } = employee ? await supabase
-    .from('employees')
-    .select('id, name, email')
-    .order('name') : { data: null }
+  // Fetch all potential senders
+  const [{ data: customers }, { data: employees }] = await Promise.all([
+    supabase.from('customers').select('id, name, email'),
+    supabase.from('employees').select('id, name, email')
+  ]);
+
+  // Create lookup maps
+  const customerMap = new Map(customers?.map(c => [c.id, c]) || []);
+  const employeeMap = new Map(employees?.map(e => [e.id, e]) || []);
+
+  // Combine messages with sender information
+  const messages = rawMessages?.map(message => ({
+    ...message,
+    sender: message.sender_type === 'customer'
+      ? customerMap.get(message.sender_id)
+      : employeeMap.get(message.sender_id)
+  })) || [];
 
   return (
     <div className="container max-w-4xl py-8 space-y-8">
