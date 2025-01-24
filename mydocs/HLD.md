@@ -226,7 +226,7 @@ Below is a simplified conceptual schema, integrated with Supabase Auth:
 ├─────────────────────────┤
 │ id (PK)                 │
 │ ticket_id (FK → tickets.id)     │
-│ sender_id (FK → users.id OR employees.id)           │
+│ sender_id               │
 │ sender_type (e.g., 'user' or 'employee')            │
 │ content (text)          │
 │ attachments (text/json) │

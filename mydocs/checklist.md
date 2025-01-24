@@ -1,4 +1,4 @@
-## Phase 1: Core Authentication & Basic Ticket Flow
+## Phase 1: Core Authentication and Basic Ticket Flow ✅
 **Objective**: Enable users to register/login and create/view tickets.
 
 ### User Authentication
@@ -18,12 +18,12 @@
 - [x] Implement ticket status updates (open → pending → closed)
 - [x] Add simple ticket filtering (status, priority)
 
-## Phase 2: Ticket Interactions & Basic Team Features
+## Phase 2: Enhanced Ticket Management 🚧
 **Objective**: Enable conversations and internal notes.
 
 ### Ticket Conversations
-- [ ] Build message input UI
-- [ ] Add real-time updates for new messages
+- [x] Build message input UI
+- [x] Add real-time updates for new messages
 - [ ] Implement file attachments (store in Supabase Storage)
 
 ### Internal Notes System
@@ -36,7 +36,7 @@
 - [ ] Build team management UI (admin-only)
 - [ ] Add employee → team assignment
 
-## Phase 3: Advanced Ticket Management
+## Phase 3: Team and Workflow Features ⏳
 **Objective**: Improve workflow with assignments and automation.
 
 ### Ticket Assignment System
@@ -54,7 +54,7 @@
 - [ ] Build UI for custom field configuration
 - [ ] Implement dynamic form rendering
 
-## Phase 4: Team Collaboration & Reporting
+## Phase 4: Customer Portal Features ⏳
 **Objective**: Enhance team coordination and analytics.
 
 ### Team Queues

@@ -13,12 +13,11 @@ export type TicketPriority = 'low' | 'medium' | 'high'
 export interface Database {
   public: {
     Tables: {
-      users: {
+      customers: {
         Row: {
           id: string
           name: string
           email: string
-          password_hash: string
           created_at: string
           updated_at: string
         }
@@ -26,7 +25,6 @@ export interface Database {
           id?: string
           name: string
           email: string
-          password_hash: string
           created_at?: string
           updated_at?: string
         }
@@ -34,7 +32,6 @@ export interface Database {
           id?: string
           name?: string
           email?: string
-          password_hash?: string
           created_at?: string
           updated_at?: string
         }
@@ -44,7 +41,6 @@ export interface Database {
           id: string
           name: string
           email: string
-          password_hash: string
           role: UserRole
           created_at: string
           updated_at: string
@@ -53,7 +49,6 @@ export interface Database {
           id?: string
           name: string
           email: string
-          password_hash: string
           role?: UserRole
           created_at?: string
           updated_at?: string
@@ -62,7 +57,6 @@ export interface Database {
           id?: string
           name?: string
           email?: string
-          password_hash?: string
           role?: UserRole
           created_at?: string
           updated_at?: string
