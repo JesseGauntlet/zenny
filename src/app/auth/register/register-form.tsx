@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 
 export function RegisterForm({ handleSubmit }: { handleSubmit: (formData: FormData) => Promise<void> }) {
   // Set default role in hidden input on mount

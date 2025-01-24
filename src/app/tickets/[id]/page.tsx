@@ -20,7 +20,8 @@ export default async function TicketPage({ params }: PageProps) {
     redirect('/auth/login')
   }
 
-  const userRole = user.user_metadata?.role || 'customer'
+  // Safely access user metadata
+  const userRole = user?.user_metadata?.role || 'customer'
   const isEmployee = userRole === 'employee'
 
   // Fetch ticket with customer and assignee details

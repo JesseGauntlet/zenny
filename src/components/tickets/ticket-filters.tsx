@@ -36,6 +36,7 @@ export function TicketFilters({ status, priority }: TicketFiltersProps) {
         className="rounded-md px-4 py-2 bg-inherit border"
         onChange={(e) => handleStatusChange(e.target.value)}
         value={status || ''}
+        aria-label="status"
       >
         <option value="">All Status</option>
         <option value="open">Open</option>
@@ -47,6 +48,7 @@ export function TicketFilters({ status, priority }: TicketFiltersProps) {
         className="rounded-md px-4 py-2 bg-inherit border"
         onChange={(e) => handlePriorityChange(e.target.value)}
         value={priority || ''}
+        aria-label="priority"
       >
         <option value="">All Priority</option>
         <option value="low">Low</option>
