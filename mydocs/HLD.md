@@ -168,6 +168,7 @@ Below is a simplified conceptual schema, integrated with Supabase Auth:
 │       customers         │
 ├─────────────────────────┤
 │ id (PK, FK → auth.users.id) │
+│ email                   │
 │ name                    │
 │ created_at              │
 │ updated_at              │
@@ -177,8 +178,8 @@ Below is a simplified conceptual schema, integrated with Supabase Auth:
 │     employees           │
 ├─────────────────────────┤
 │ id (PK, FK → auth.users.id) │
-│ name                    │
 │ email                   │
+│ name                    │
 │ role (admin, agent)     │
 │ created_at              │
 │ updated_at              │

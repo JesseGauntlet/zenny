@@ -1,14 +1,15 @@
 root = true
 In order to prevent typing errors, references the /types directory for all type definitions.
+Read and record your progress in /mydocs/journal.md to maintain context as we go.
 
 Project Structure
 /
 ├── .env                    # Production environment variables
 ├── .env.local             # Local environment variables
-├── docs/                  # Documentation directory
+├── mydocs/                  # Documentation directory
 │   ├── interfaces.md      # Interface documentation
 │   ├── HLD.md            # High-level design document
-│   └── mvp_checklist.md  # MVP checklist and tasks
+│   └── checklist.md  # hecklist and tasks
 ├── src/                   # Source code directory
 │   ├── app/              # Next.js app directory
 │   │   ├── auth/         # Authentication pages

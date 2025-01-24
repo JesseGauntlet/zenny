@@ -1,141 +1,161 @@
 import { createClient } from '@/utils/supabase/server'
+import { redirect } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { notFound, redirect } from 'next/navigation'
-import { format } from 'date-fns'
+import Link from 'next/link'
+import { Badge } from '@/components/ui/badge'
+import { formatDistanceToNow } from 'date-fns'
 
-export default async function TicketPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+interface PageProps {
+  params: {
+    id: string
+  }
+}
+
+export default async function TicketPage({ params }: PageProps) {
   const supabase = await createClient()
   
-  // Get the current session
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) {
-    return redirect('/auth/login')
+  // Get authenticated user
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (!user || userError) {
+    redirect('/auth/login')
   }
 
-  // Verify the user is a customer
-  const { data: customer } = await supabase
-    .from('customers')
-    .select()
-    .eq('id', session.user.id)
-    .single()
+  const userRole = user.user_metadata?.role || 'customer'
+  const isEmployee = userRole === 'employee'
 
-  if (!customer) {
-    return redirect('/')
-  }
-
-  // Fetch ticket with messages
-  const { data: ticket } = await supabase
+  // Fetch ticket with customer and assignee details
+  const { data: ticket, error: ticketError } = await supabase
     .from('tickets')
     .select(`
       *,
-      customer:customer_id (
+      customer:customers(
+        email,
         name
       ),
-      ticket_messages (
-        id,
-        content,
-        created_at,
-        sender_id,
-        sender_type
+      assigned_to:employees(
+        email,
+        name,
+        role
       )
     `)
     .eq('id', params.id)
     .single()
 
-  if (!ticket) {
-    return notFound()
+  if (ticketError || !ticket) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Ticket Not Found</h1>
+          <Link href="/tickets">
+            <Button>Back to Tickets</Button>
+          </Link>
+        </div>
+      </div>
+    )
   }
 
-  // Verify user owns the ticket
-  if (ticket.customer_id !== session.user.id) {
-    return redirect('/')
+  // Check if user has access to this ticket
+  if (!isEmployee && ticket.customer_id !== user.id) {
+    redirect('/tickets')
   }
 
-  async function addMessage(formData: FormData) {
+  // Server action to update ticket status
+  async function updateStatus(formData: FormData) {
     'use server'
-
+    
     const supabase = await createClient()
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
-      return redirect('/auth/login')
-    }
-
-    const content = formData.get('content') as string
+    const newStatus = formData.get('status') as string
     
     const { error } = await supabase
-      .from('ticket_messages')
-      .insert({
-        ticket_id: params.id,
-        content,
-        sender_id: session.user.id,
-        sender_type: 'customer'
+      .from('tickets')
+      .update({ 
+        status: newStatus,
+        updated_at: new Date().toISOString()
       })
+      .eq('id', params.id)
 
     if (error) {
-      return redirect(`/tickets/${params.id}?error=${error.message}`)
+      console.error('Error updating ticket:', error)
+      throw new Error('Failed to update ticket')
     }
 
-    // Redirect to the same page to refresh the messages
-    return redirect(`/tickets/${params.id}`)
+    // Refresh the page to show updated status
+    redirect(`/tickets/${params.id}`)
   }
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="max-w-3xl mx-auto space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">{ticket.subject}</h1>
-          <div className="flex gap-4 text-sm text-muted-foreground">
-            <div>Status: {ticket.status}</div>
-            <div>Priority: {ticket.priority}</div>
+    <div className="container mx-auto p-6">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="flex justify-between items-start mb-8">
+          <div>
+            <div className="flex items-center gap-4 mb-2">
+              <h1 className="text-2xl font-bold">#{ticket.id}</h1>
+              <Badge variant={
+                ticket.status === 'open' ? 'default' :
+                ticket.status === 'pending' ? 'secondary' : 'outline'
+              }>
+                {ticket.status}
+              </Badge>
+              <Badge variant={
+                ticket.priority === 'high' ? 'destructive' :
+                ticket.priority === 'medium' ? 'default' : 'secondary'
+              }>
+                {ticket.priority}
+              </Badge>
+            </div>
+            <p className="text-lg font-medium mb-1">{ticket.subject}</p>
+            <p className="text-sm text-muted-foreground">
+              Created {formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true })}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Link href="/tickets">
+              <Button variant="outline">Back to Tickets</Button>
+            </Link>
+            {isEmployee && (
+              <form action={updateStatus} className="flex gap-2">
+                <select
+                  name="status"
+                  className="rounded-md border px-3"
+                  defaultValue={ticket.status}
+                >
+                  <option value="open">Open</option>
+                  <option value="pending">Pending</option>
+                  <option value="closed">Closed</option>
+                </select>
+                <Button type="submit">Update Status</Button>
+              </form>
+            )}
           </div>
         </div>
 
-        <div className="p-4 rounded-lg border bg-card">
-          <div className="flex justify-between items-start mb-4">
-            <div className="text-sm font-medium">
-              {ticket.customer?.name}
-            </div>
-            <div className="text-sm text-muted-foreground">
-              {format(new Date(ticket.created_at), 'PPpp')}
-            </div>
+        {/* Customer & Assignment Info */}
+        <div className="grid grid-cols-2 gap-6 mb-8">
+          <div className="space-y-1">
+            <p className="text-sm font-medium">Customer</p>
+            <p className="font-medium">{ticket.customer?.name}</p>
+            <p className="text-sm text-muted-foreground">{ticket.customer?.email}</p>
           </div>
-          <p className="whitespace-pre-wrap">{ticket.description}</p>
+          <div className="space-y-1">
+            <p className="text-sm font-medium">Assigned To</p>
+            {ticket.assigned_to ? (
+              <>
+                <p className="font-medium">{ticket.assigned_to.name}</p>
+                <p className="text-sm text-muted-foreground">{ticket.assigned_to.email}</p>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">Unassigned</p>
+            )}
+          </div>
         </div>
 
-        <div className="space-y-6">
-          {ticket.ticket_messages.map((message: any) => (
-            <div
-              key={message.id}
-              className="p-4 rounded-lg border bg-card"
-            >
-              <div className="flex justify-between items-start mb-2">
-                <div className="text-sm font-medium">
-                  {message.sender_type === 'customer' ? 'You' : 'Support Agent'}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {format(new Date(message.created_at), 'PPpp')}
-                </div>
-              </div>
-              <p className="whitespace-pre-wrap">{message.content}</p>
-            </div>
-          ))}
-
-          <form action={addMessage} className="space-y-4">
-            <Textarea
-              name="content"
-              placeholder="Type your message here..."
-              required
-              rows={3}
-            />
-            <Button type="submit" className="w-full">
-              Send Message
-            </Button>
-          </form>
+        {/* Description */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-medium">Description</h2>
+          <div className="rounded-lg border bg-card p-4">
+            <p className="whitespace-pre-wrap">{ticket.description}</p>
+          </div>
         </div>
       </div>
     </div>

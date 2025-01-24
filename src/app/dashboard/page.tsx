@@ -1,106 +1,52 @@
 import { createClient } from '@/utils/supabase/server'
-import Link from 'next/link'
 
-export default async function DashboardPage() {
+export default async function Dashboard() {
   const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
-
-  // Check if user exists in customers or employees table
-  const { data: customer } = await supabase
-    .from('customers')
-    .select('id')
-    .eq('id', user.id)
-    .single()
-
-  const { data: employee } = await supabase
-    .from('employees')
-    .select('id')
-    .eq('id', user.id)
-    .single()
-
-  const userRole = customer ? 'customer' : employee ? 'employee' : null
-  if (!userRole) return null
-
-  // Get ticket statistics
-  const { data: tickets } = await supabase
-    .from('tickets')
-    .select('status, priority')
-    .eq(userRole === 'customer' ? 'customer_id' : 'assigned_employee_id', user.id)
-
-  const stats = {
-    total: tickets?.length || 0,
-    open: tickets?.filter(t => t.status === 'open').length || 0,
-    pending: tickets?.filter(t => t.status === 'pending').length || 0,
-    closed: tickets?.filter(t => t.status === 'closed').length || 0,
-    highPriority: tickets?.filter(t => t.priority === 'high').length || 0,
-  }
+  const { data: { session } } = await supabase.auth.getSession()
+  const userRole = session?.user?.user_metadata?.role || 'customer'
 
   return (
-    <div className="flex-1 space-y-4 p-8">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
+    <div className="container mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
       
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <DashboardCard
-          title="Total Tickets"
-          value={stats.total}
-          href="/tickets"
-        />
-        <DashboardCard
-          title="Open Tickets"
-          value={stats.open}
-          href="/tickets?status=open"
-        />
-        <DashboardCard
-          title="Pending Tickets"
-          value={stats.pending}
-          href="/tickets?status=pending"
-        />
-        <DashboardCard
-          title="High Priority"
-          value={stats.highPriority}
-          href="/tickets?priority=high"
-        />
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* Quick Stats */}
+        <div className="rounded-lg border bg-card p-6">
+          <h3 className="font-semibold mb-2">Active Tickets</h3>
+          <p className="text-3xl font-bold">12</p>
+        </div>
+
+        <div className="rounded-lg border bg-card p-6">
+          <h3 className="font-semibold mb-2">Resolved This Week</h3>
+          <p className="text-3xl font-bold">8</p>
+        </div>
+
+        {userRole === 'employee' && (
+          <div className="rounded-lg border bg-card p-6">
+            <h3 className="font-semibold mb-2">Team Performance</h3>
+            <p className="text-3xl font-bold">95%</p>
+          </div>
+        )}
       </div>
 
-      {userRole === 'customer' ? (
-        <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-          <Link
-            href="/tickets/new"
-            className="inline-block bg-green-700 text-white rounded-md px-4 py-2 hover:bg-green-600"
-          >
-            Create New Ticket
-          </Link>
+      {/* Recent Activity */}
+      <div className="mt-8">
+        <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
+        <div className="rounded-lg border">
+          <div className="p-4 border-b">
+            <p className="font-medium">Ticket #123 was updated</p>
+            <p className="text-sm text-muted-foreground">2 hours ago</p>
+          </div>
+          <div className="p-4 border-b">
+            <p className="font-medium">New comment on Ticket #456</p>
+            <p className="text-sm text-muted-foreground">5 hours ago</p>
+          </div>
+          <div className="p-4">
+            <p className="font-medium">Ticket #789 was resolved</p>
+            <p className="text-sm text-muted-foreground">1 day ago</p>
+          </div>
         </div>
-      ) : (
-        <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
-          {/* We'll implement this in the next phase */}
-          <p className="text-gray-500">Recent ticket updates will appear here</p>
-        </div>
-      )}
+      </div>
     </div>
-  )
-}
-
-function DashboardCard({
-  title,
-  value,
-  href,
-}: {
-  title: string
-  value: number
-  href: string
-}) {
-  return (
-    <Link
-      href={href}
-      className="rounded-lg border p-4 hover:border-gray-400 transition-colors"
-    >
-      <h3 className="text-sm font-medium">{title}</h3>
-      <p className="text-2xl font-bold">{value}</p>
-    </Link>
   )
 } 

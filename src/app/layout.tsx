@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { createClient } from "@/utils/supabase/server";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { Sidebar } from "@/components/layout/sidebar";
+import { redirect } from 'next/navigation';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -12,20 +12,10 @@ export const metadata: Metadata = {
   description: "Customer support ticket system",
 };
 
-async function SignOutButton() {
-  async function signOut() {
-    'use server'
-    const supabase = await createClient();
-    await supabase.auth.signOut();
-  }
-
-  return (
-    <form action={signOut}>
-      <Button variant="ghost" type="submit">
-        Sign Out
-      </Button>
-    </form>
-  );
+async function signOut() {
+  'use server'
+  const supabase = await createClient();
+  await supabase.auth.signOut();
 }
 
 export default async function RootLayout({
@@ -34,22 +24,29 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  
+  // Get authenticated user
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  
+  // Get user role from metadata
+  const userRole = user?.user_metadata?.role || 'customer';
+  const userEmail = user?.email;
 
   return (
     <html lang="en">
       <body className={inter.className}>
-        {session && (
-          <header className="border-b">
-            <div className="container mx-auto flex h-16 items-center justify-between">
-              <Link href="/" className="font-semibold">
-                Zenny Support
-              </Link>
-              <SignOutButton />
-            </div>
-          </header>
-        )}
-        {children}
+        <div className="flex h-screen">
+          {user && !userError && (
+            <Sidebar 
+              userRole={userRole} 
+              signOut={signOut} 
+              userEmail={userEmail || 'Unknown User'} 
+            />
+          )}
+          <main className="flex-1 overflow-y-auto">
+            {children}
+          </main>
+        </div>
       </body>
     </html>
   );
