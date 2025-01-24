@@ -1,25 +1,18 @@
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Inter } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export default function AuthLayout({
   children,
-  searchParams = {},
 }: {
-  children: React.ReactNode
-  searchParams?: { error?: string; message?: string }
+  children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-4">
-      {searchParams?.error && (
-        <Alert variant="destructive" className="w-[350px]">
-          <AlertDescription>{searchParams.error}</AlertDescription>
-        </Alert>
-      )}
-      {searchParams?.message && (
-        <Alert className="w-[350px]">
-          <AlertDescription>{searchParams.message}</AlertDescription>
-        </Alert>
-      )}
-      {children}
+    <div className={cn('min-h-screen bg-background antialiased', inter.className)}>
+      <main className="flex-1">
+        {children}
+      </main>
     </div>
-  )
+  );
 } 
