@@ -41,6 +41,12 @@ export default async function TicketPage({ params }: PageProps) {
     .eq('id', params.id)
     .single()
 
+  // Fetch available employees for assignment
+  const { data: employees } = isEmployee ? await supabase
+    .from('employees')
+    .select('id, name, email, role')
+    .order('name') : { data: null }
+
   if (ticketError || !ticket) {
     return (
       <div className="container mx-auto p-6">
@@ -83,6 +89,30 @@ export default async function TicketPage({ params }: PageProps) {
     redirect(`/tickets/${params.id}`)
   }
 
+  // Server action to assign ticket
+  async function assignTicket(formData: FormData) {
+    'use server'
+    
+    const supabase = await createClient()
+    const employeeId = formData.get('employee_id') as string
+    
+    const { error } = await supabase
+      .from('tickets')
+      .update({ 
+        assigned_employee_id: employeeId === 'unassign' ? null : employeeId,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', params.id)
+
+    if (error) {
+      console.error('Error assigning ticket:', error)
+      throw new Error('Failed to assign ticket')
+    }
+
+    // Refresh the page to show updated assignment
+    redirect(`/tickets/${params.id}`)
+  }
+
   return (
     <div className="container mx-auto p-6">
       <div className="max-w-4xl mx-auto">
@@ -114,18 +144,35 @@ export default async function TicketPage({ params }: PageProps) {
               <Button variant="outline">Back to Tickets</Button>
             </Link>
             {isEmployee && (
-              <form action={updateStatus} className="flex gap-2">
-                <select
-                  name="status"
-                  className="rounded-md border px-3"
-                  defaultValue={ticket.status}
-                >
-                  <option value="open">Open</option>
-                  <option value="pending">Pending</option>
-                  <option value="closed">Closed</option>
-                </select>
-                <Button type="submit">Update Status</Button>
-              </form>
+              <>
+                <form action={updateStatus} className="flex gap-2">
+                  <select
+                    name="status"
+                    className="rounded-md border px-3"
+                    defaultValue={ticket.status}
+                  >
+                    <option value="open">Open</option>
+                    <option value="pending">Pending</option>
+                    <option value="closed">Closed</option>
+                  </select>
+                  <Button type="submit">Update Status</Button>
+                </form>
+                <form action={assignTicket} className="flex gap-2">
+                  <select
+                    name="employee_id"
+                    className="rounded-md border px-3"
+                    defaultValue={ticket.assigned_employee_id || ''}
+                  >
+                    <option value="unassign">Unassigned</option>
+                    {employees?.map((employee) => (
+                      <option key={employee.id} value={employee.id}>
+                        {employee.name}
+                      </option>
+                    ))}
+                  </select>
+                  <Button type="submit">Assign</Button>
+                </form>
+              </>
             )}
           </div>
         </div>

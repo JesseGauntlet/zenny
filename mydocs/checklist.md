@@ -2,27 +2,26 @@
 **Objective**: Enable users to register/login and create/view tickets.
 
 ### User Authentication
-- [ ] Implement email/password signup/login
-- [ ] Add role-based registration (customer vs employee)
-- [ ] Set up RLS policies for auth.users, customers, and employees
-- [ ] Create trigger to auto-create customer/employee records after auth signup
+- [x] Implement email/password signup/login
+- [x] Add role-based registration (customer vs employee)
+- [x] Set up RLS policies for auth.users, customers, and employees
+- [x] Create trigger to auto-create customer/employee records after auth signup
 
 ### Basic Ticket Creation
-- [ ] Build ticket creation form (subject, description, priority)
-- [ ] Create tickets table with core fields
-- [ ] Add API endpoint: POST /tickets
-- [ ] Implement ticket list view (customers see only their tickets)
+- [x] Build ticket creation form (subject, description, priority)
+- [x] Create tickets table with core fields
+- [x] Add API endpoint: POST /tickets
+- [x] Implement ticket list view (customers see only their tickets)
 
 ### Basic Ticket Management
-- [ ] Add ticket detail page (read-only for customers)
-- [ ] Implement ticket status updates (open → pending → closed)
-- [ ] Add simple ticket filtering (status, priority)
+- [x] Add ticket detail page (read-only for customers)
+- [x] Implement ticket status updates (open → pending → closed)
+- [x] Add simple ticket filtering (status, priority)
 
 ## Phase 2: Ticket Interactions & Basic Team Features
 **Objective**: Enable conversations and internal notes.
 
 ### Ticket Conversations
-- [ ] Create ticket_messages table
 - [ ] Build message input UI
 - [ ] Add real-time updates for new messages
 - [ ] Implement file attachments (store in Supabase Storage)
@@ -41,8 +40,8 @@
 **Objective**: Improve workflow with assignments and automation.
 
 ### Ticket Assignment System
-- [ ] Add assigned_employee_id and assigned_team_id to tickets
-- [ ] Implement assignment dropdown in ticket UI
+- [x] Add assigned_employee_id and assigned_team_id to tickets
+- [x] Implement assignment dropdown in ticket UI
 - [ ] Add assignment notifications (email/webhook)
 
 ### Tagging System
