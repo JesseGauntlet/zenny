@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import Image from 'next/image'
 import {
   LayoutDashboard,
   Ticket,
@@ -12,6 +13,7 @@ import {
   LogOut,
   User,
   Users2,
+  BookOpen,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -25,6 +27,7 @@ const customerNav: NavItem[] = [
   { href: '/dashboard', label: 'Overview', icon: <LayoutDashboard /> },
   { href: '/tickets', label: 'My Tickets', icon: <Ticket /> },
   { href: '/tickets/new', label: 'New Ticket', icon: <PlusCircle /> },
+  { href: '/knowledge', label: 'Knowledge Base', icon: <BookOpen /> },
   { href: '/settings', label: 'Settings', icon: <Settings /> },
 ]
 
@@ -34,6 +37,7 @@ const baseEmployeeNav: NavItem[] = [
   { href: '/tickets/assigned', label: 'My Assigned', icon: <PlusCircle /> },
   { href: '/my-team', label: 'My Team', icon: <Users2 /> },
   { href: '/teams', label: 'Teams', icon: <Users /> },
+  { href: '/knowledge', label: 'Knowledge Base', icon: <BookOpen /> },
   { href: '/settings', label: 'Settings', icon: <Settings /> },
 ]
 
@@ -67,8 +71,18 @@ export function Sidebar({ userRole, signOut, userEmail, employeeRole }: SidebarP
     <div className="flex h-screen flex-col justify-between border-r bg-background px-4 py-6">
       <div className="space-y-4">
         <div className="px-3 py-2 space-y-1">
-          <Link href="/" className="flex items-center space-x-2">
-            <span className="text-xl font-bold">Zenny Support</span>
+          <Link href="/" className="flex items-center">
+            <div className="flex items-center">
+              <div className="relative w-8 h-8 -mr-1.5">
+                <Image
+                  src="/assets/logos/zlogo.png"
+                  alt="Z"
+                  fill
+                  className="object-contain"
+                />
+              </div>
+              <span className="text-xl font-bold">enny Support</span>
+            </div>
           </Link>
           <div className="flex items-center space-x-2">
             <div className={cn(

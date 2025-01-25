@@ -72,7 +72,8 @@ export default async function MyTeamPage() {
 
   if (!data?.team) {
     return (
-      <div className="container max-w-6xl py-8 px-4 md:px-8 lg:px-10">
+      <div className="p-8">
+        <h1 className="text-2xl font-bold mb-6">My Team</h1>
         <Card>
           <CardHeader>
             <CardTitle>My Team</CardTitle>
@@ -94,37 +95,41 @@ export default async function MyTeamPage() {
   const teamMembers = team.members.map(m => m.employee)
 
   return (
-    <div className="container max-w-6xl py-8 px-4 md:px-8 lg:px-10 space-y-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>{team.name}</CardTitle>
-          <CardDescription>{team.description || 'No description available'}</CardDescription>
-        </CardHeader>
-      </Card>
+    <div className="p-8">
+      <h1 className="text-2xl font-bold mb-6">My Team</h1>
+      
+      <div className="space-y-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>{team.name}</CardTitle>
+            <CardDescription>{team.description || 'No description available'}</CardDescription>
+          </CardHeader>
+        </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Team Members</CardTitle>
-          <CardDescription>Your colleagues in {team.name}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {teamMembers.map((member) => (
-              <div key={member.id} className="flex items-center space-x-4">
-                <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center">
-                  <span className="text-sm font-medium">
-                    {member.name?.[0] || member.email[0].toUpperCase()}
-                  </span>
+        <Card>
+          <CardHeader>
+            <CardTitle>Team Members</CardTitle>
+            <CardDescription>Your colleagues in {team.name}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {teamMembers.map((member) => (
+                <div key={member.id} className="flex items-center space-x-4">
+                  <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center">
+                    <span className="text-sm font-medium">
+                      {member.name?.[0] || member.email[0].toUpperCase()}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">{member.name || member.email}</p>
+                    <p className="text-xs text-muted-foreground capitalize">{member.role}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium">{member.name || member.email}</p>
-                  <p className="text-xs text-muted-foreground capitalize">{member.role}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 } 

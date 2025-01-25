@@ -31,9 +31,9 @@
 - [x] Implement RLS policies for notes
 
 ### Basic Team Structure
-- [ ] Create teams table
-- [ ] Build team management UI (admin-only)
-- [ ] Add employee → team assignment
+- [x] Create teams table
+- [x] Build team management UI (admin-only)
+- [x] Add employee → team assignment
 
 ## Phase 3: Team and Workflow Features ⏳
 **Objective**: Improve workflow with assignments and automation.
@@ -41,7 +41,6 @@
 ### Ticket Assignment System
 - [x] Add assigned_employee_id and assigned_team_id to tickets
 - [x] Implement assignment dropdown in ticket UI
-- [ ] Add assignment notifications (email/webhook)
 
 ### Tagging System
 - [ ] Create tags and ticket_tags tables
@@ -73,3 +72,5 @@
 
 Stretch Goals:
 - [ ] Add file attachments (store in Supabase Storage)
+- [ ] Add email support
+- [ ] Add assignment notifications (email/webhook)

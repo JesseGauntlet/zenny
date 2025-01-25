@@ -11,6 +11,16 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Zenny Support",
   description: "Customer support ticket system",
+  icons: {
+    icon: [
+      { url: '/assets/logos/zlogo.png', sizes: '32x32', type: 'image/png' },
+      { url: '/assets/logos/zlogo.png', sizes: '16x16', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/assets/logos/zlogo.png', sizes: '180x180', type: 'image/png' },
+    ],
+    shortcut: [{ url: '/assets/logos/zlogo.png' }],
+  }
 };
 
 export default async function RootLayout({

@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { createClient } from '@/utils/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState } from 'react'
 import {
   DropdownMenu,
@@ -84,7 +85,19 @@ export default function LoginPage() {
   return (
     <Card className="w-[400px] shadow-lg">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl text-center">Login</CardTitle>
+        <div className="flex justify-center mb-4">
+          <div className="flex items-center">
+            <div className="relative w-9 h-9 -mr-1">
+              <Image
+                src="/assets/logos/zlogo.png"
+                alt="Z"
+                fill
+                className="object-contain"
+              />
+            </div>
+            <span className="text-2xl font-bold">enny Support</span>
+          </div>
+        </div>
         <CardDescription className="text-center">Enter your email and password to login</CardDescription>
       </CardHeader>
       <CardContent>
