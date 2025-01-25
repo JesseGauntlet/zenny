@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { formatDistanceToNow } from 'date-fns'
 import { TicketMessages } from '@/components/tickets/ticket-messages'
 import { TicketNotesPanel } from '@/components/tickets/ticket-notes-panel'
-import { Database } from '@/types/database.types'
+import { InteractiveBadge } from '@/components/tickets/interactive-badge'
 import { TicketPageProps } from '@/types/tickets'
 
 export default async function TicketPage({ params }: TicketPageProps) {
@@ -86,87 +86,131 @@ export default async function TicketPage({ params }: TicketPageProps) {
   }
 
   return (
-    <div className="container max-w-4xl py-8 space-y-8">
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-2xl font-bold mb-2">Ticket #{ticket.id}</h1>
-          <p className="text-muted-foreground">{ticket.subject}</p>
-          {ticket.assigned_employee && (
-            <p className="text-sm text-muted-foreground mt-2">
-              Assigned to: {ticket.assigned_employee.name}
-            </p>
-          )}
-        </div>
-        <div className="space-y-2">
-          <div className="flex gap-2">
-            <Link href="/tickets">
-              <Button variant="outline">Back to Tickets</Button>
-            </Link>
-            {employee && (
-              <TicketNotesPanel
-                ticketId={ticket.id}
-                notes={notes}
-                currentUserId={user.id}
-              />
-            )}
+    <div className="container max-w-6xl py-8 px-4 md:px-8 lg:px-10">
+      {/* Header Bar */}
+      <div className="bg-background border rounded-lg p-6 mb-8">
+        <div className="flex items-start gap-4 mb-6">
+          <Link href="/tickets">
+            <Button variant="ghost" size="sm" className="text-muted-foreground">
+              ← Back
+            </Button>
+          </Link>
+          <div className="flex-1">
+            <div className="flex items-center gap-6 mb-4 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">Ticket ID:</span>
+                <Badge variant="outline">
+                  #{ticket.id}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">Created by:</span>
+                <span className="font-medium">{ticket.customer?.name}</span>
+                <span className="text-muted-foreground">({ticket.customer?.email})</span>
+              </div>
+            </div>
+
+            <h1 className="text-2xl font-bold mb-2">{ticket.subject}</h1>
+            <p className="text-muted-foreground mb-4">{ticket.description}</p>
+            
+            <div className="space-y-2">
+              <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                <span>Status</span>
+                <span>Priority</span>
+                <span>Assigned To</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {employee ? (
+                  <>
+                    <InteractiveBadge
+                      type="status"
+                      currentValue={ticket.status}
+                      options={[
+                        { value: 'open', label: 'Open' },
+                        { value: 'pending', label: 'Pending' },
+                        { value: 'closed', label: 'Closed' }
+                      ]}
+                      ticketId={ticket.id}
+                      variant={
+                        ticket.status === 'open' ? 'default' :
+                        ticket.status === 'pending' ? 'secondary' : 'outline'
+                      }
+                    />
+                    <InteractiveBadge
+                      type="priority"
+                      currentValue={ticket.priority}
+                      options={[
+                        { value: 'low', label: 'Low' },
+                        { value: 'medium', label: 'Medium' },
+                        { value: 'high', label: 'High' }
+                      ]}
+                      ticketId={ticket.id}
+                      variant={
+                        ticket.priority === 'high' ? 'destructive' :
+                        ticket.priority === 'medium' ? 'default' : 'secondary'
+                      }
+                    />
+                    <InteractiveBadge
+                      type="assign"
+                      currentValue={ticket.assigned_employee_id || ''}
+                      currentLabel={ticket.assigned_employee?.name || 'Unassigned'}
+                      options={[
+                        { value: '', label: 'Unassigned' },
+                        ...(employees?.map(emp => ({
+                          value: emp.id,
+                          label: emp.name
+                        })) || [])
+                      ]}
+                      ticketId={ticket.id}
+                      variant="outline"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <Badge variant={
+                      ticket.status === 'open' ? 'default' :
+                      ticket.status === 'pending' ? 'secondary' : 'outline'
+                    } className="capitalize">
+                      {ticket.status}
+                    </Badge>
+                    <Badge variant={
+                      ticket.priority === 'high' ? 'destructive' :
+                      ticket.priority === 'medium' ? 'default' : 'secondary'
+                    } className="capitalize">
+                      {ticket.priority}
+                    </Badge>
+                    <Badge variant="outline" className="capitalize">
+                      {ticket.assigned_employee?.name || 'Unassigned'}
+                    </Badge>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
-          {employee && employees && (
-            <form action={assignTicket} className="flex gap-2 mt-4">
-              <input type="hidden" name="ticketId" value={ticket.id} />
-              <select 
-                name="employeeId" 
-                className="border rounded px-3 py-2"
-                defaultValue={ticket.assigned_employee?.id || ''}
-              >
-                <option value="">Unassigned</option>
-                {employees.map((emp) => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.name}
-                  </option>
-                ))}
-              </select>
-              <Button type="submit" variant="secondary">
-                Assign
-              </Button>
-            </form>
-          )}
         </div>
       </div>
 
+      {/* Messages Section */}
       <div>
-        <h2 className="text-xl font-semibold mb-6">Messages</h2>
-        <TicketMessages
-          ticketId={ticket.id}
-          messages={messages || []}
-          currentUserId={user.id}
-          userRole={employee ? 'employee' : 'customer'}
-        />
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-lg font-semibold">Conversation</h2>
+          {employee && (
+            <TicketNotesPanel
+              ticketId={ticket.id}
+              notes={notes}
+              currentUserId={user.id}
+            />
+          )}
+        </div>
+        <div className="border rounded-lg bg-background p-6">
+          <TicketMessages
+            ticketId={ticket.id}
+            messages={messages || []}
+            currentUserId={user.id}
+            userRole={employee ? 'employee' : 'customer'}
+          />
+        </div>
       </div>
     </div>
   )
-}
-
-// Server actions
-async function updateTicketStatus(ticketId: string, status: string) {
-  'use server'
-  const supabase = await createClient()
-  await supabase
-    .from('tickets')
-    .update({ status })
-    .eq('id', ticketId)
-}
-
-async function assignTicket(formData: FormData) {
-  'use server'
-  const ticketId = formData.get('ticketId') as string
-  const employeeId = formData.get('employeeId') as string
-  
-  const supabase = await createClient()
-  await supabase
-    .from('tickets')
-    .update({ assigned_employee_id: employeeId || null })
-    .eq('id', ticketId)
-
-  // Redirect back to the same page to show the update
-  redirect(`/tickets/${ticketId}`)
 } 

@@ -72,7 +72,7 @@ export default async function MyTeamPage() {
 
   if (!data?.team) {
     return (
-      <div className="container py-8">
+      <div className="container max-w-6xl py-8 px-4 md:px-8 lg:px-10">
         <Card>
           <CardHeader>
             <CardTitle>My Team</CardTitle>
@@ -94,7 +94,7 @@ export default async function MyTeamPage() {
   const teamMembers = team.members.map(m => m.employee)
 
   return (
-    <div className="container py-8 space-y-8">
+    <div className="container max-w-6xl py-8 px-4 md:px-8 lg:px-10 space-y-8">
       <Card>
         <CardHeader>
           <CardTitle>{team.name}</CardTitle>
