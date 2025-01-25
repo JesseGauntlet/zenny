@@ -10,7 +10,7 @@ export default function AuthLayout({
 }) {
   return (
     <div className={cn('min-h-screen bg-background antialiased', inter.className)}>
-      <main className="flex-1">
+      <main className="flex min-h-screen items-center justify-center">
         {children}
       </main>
     </div>

@@ -4,15 +4,9 @@ import { TicketFilters } from '@/components/tickets/ticket-filters'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { TicketListPageProps } from '@/types/tickets'
 
-interface PageProps {
-  searchParams: Promise<{
-    status?: string
-    priority?: string
-  }>
-}
-
-export default async function TicketsPage(props: PageProps) {
+export default async function TicketsPage({ searchParams, params }: TicketListPageProps) {
   const supabase = await createClient()
   
   // Get authenticated user
@@ -25,7 +19,7 @@ export default async function TicketsPage(props: PageProps) {
   const isEmployee = userRole === 'employee'
 
   // Get status and priority from searchParams
-  const { status, priority } = await props.searchParams
+  const { status, priority } = await searchParams
 
   // Build query with customer details for employees
   let query = supabase

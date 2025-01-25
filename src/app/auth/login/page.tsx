@@ -51,12 +51,11 @@ export default function LoginPage() {
           .eq('id', user.id)
           .single()
 
-        if (customer) {
-          router.push('/')
-        } else if (employee) {
-          router.push('/dashboard/agent')
+        if (customer || employee) {
+          // Force a full page reload to ensure layout is properly rendered
+          window.location.href = '/dashboard'
         } else {
-          router.push('/auth/unauthorized')
+          window.location.href = '/auth/unauthorized'
         }
       }
     } catch (err) {
@@ -68,10 +67,10 @@ export default function LoginPage() {
   }
 
   return (
-    <Card className="w-[350px]">
-      <CardHeader>
-        <CardTitle>Login</CardTitle>
-        <CardDescription>Enter your email and password to login</CardDescription>
+    <Card className="w-[400px] shadow-lg">
+      <CardHeader className="space-y-1">
+        <CardTitle className="text-2xl text-center">Login</CardTitle>
+        <CardDescription className="text-center">Enter your email and password to login</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">

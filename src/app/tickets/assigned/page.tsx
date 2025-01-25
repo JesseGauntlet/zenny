@@ -2,15 +2,9 @@ import { createClient } from '@/utils/supabase/server'
 import { TicketList } from '@/components/tickets/ticket-list'
 import { TicketFilters } from '@/components/tickets/ticket-filters'
 import { redirect } from 'next/navigation'
+import { TicketListPageProps } from '@/types/tickets'
 
-interface PageProps {
-  searchParams: Promise<{
-    status?: string
-    priority?: string
-  }>
-}
-
-export default async function AssignedTicketsPage(props: PageProps) {
+export default async function AssignedTicketsPage({ searchParams, params }: TicketListPageProps) {
   const supabase = await createClient()
   
   // Get authenticated user
@@ -26,7 +20,7 @@ export default async function AssignedTicketsPage(props: PageProps) {
   }
 
   // Get status and priority from searchParams
-  const { status, priority } = await props.searchParams
+  const { status, priority } = await searchParams
 
   // Build query for assigned tickets
   let query = supabase

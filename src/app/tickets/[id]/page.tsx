@@ -8,12 +8,9 @@ import { formatDistanceToNow } from 'date-fns'
 import { TicketMessages } from '@/components/tickets/ticket-messages'
 import { TicketNotesPanel } from '@/components/tickets/ticket-notes-panel'
 import { Database } from '@/types/database.types'
+import { TicketPageProps } from '@/types/tickets'
 
-interface PageProps {
-  params: { id: string }
-}
-
-export default async function TicketPage({ params }: PageProps) {
+export default async function TicketPage({ params }: TicketPageProps) {
   // Get the ticket ID from params
   const { id: ticketId } = await params
 

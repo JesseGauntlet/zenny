@@ -24,9 +24,7 @@ export async function POST(request: Request) {
     }
 
     // Now use service role to insert into customers/employees table
-    const serviceRole = createClient({
-      serviceRole: true
-    })
+    const serviceRole = await createClient(true)
     
     if (role === 'customer') {
       const { error: customerError } = await serviceRole

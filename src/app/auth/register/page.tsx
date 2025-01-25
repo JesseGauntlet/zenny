@@ -38,7 +38,7 @@ async function handleSubmit(formData: FormData) {
 
 export default function RegisterPage() {
   return (
-    <div className="flex-1 flex flex-col w-full px-8 sm:max-w-md justify-center gap-2">
+    <div className="w-[400px]">
       <RegisterForm handleSubmit={handleSubmit} />
     </div>
   )
