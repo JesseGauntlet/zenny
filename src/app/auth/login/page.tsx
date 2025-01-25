@@ -6,12 +6,31 @@ import { createClient } from '@/utils/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useState } from 'react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [error, setError] = useState<string | null>(searchParams.get('error'))
   const [isLoading, setIsLoading] = useState(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+
+  const demoUsers = {
+    customer: { email: 'regis3@regis3.com', password: 'regis3' },
+    agent: { email: 'regis5@regis5.com', password: 'regis5' },
+    admin: { email: 'regis4@regis4.com', password: 'regis4' },
+  }
+
+  const setDemoUser = (role: keyof typeof demoUsers) => {
+    setEmail(demoUsers[role].email)
+    setPassword(demoUsers[role].password)
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -19,10 +38,6 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      const formData = new FormData(e.currentTarget)
-      const email = formData.get('email') as string
-      const password = formData.get('password') as string
-      
       const supabase = createClient()
       
       const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -91,6 +106,8 @@ export default function LoginPage() {
               placeholder="Email"
               required
               disabled={isLoading}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
           </div>
           <div className="space-y-2">
@@ -100,11 +117,31 @@ export default function LoginPage() {
               placeholder="Password"
               required
               disabled={isLoading}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Logging in...' : 'Login'}
-          </Button>
+          <div className="flex gap-2">
+            <Button type="submit" className="flex-1" disabled={isLoading}>
+              {isLoading ? 'Logging in...' : 'Login'}
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">Demo User</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => setDemoUser('customer')}>
+                  Customer
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setDemoUser('agent')}>
+                  Agent
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setDemoUser('admin')}>
+                  Admin
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </form>
       </CardContent>
       <CardFooter className="flex justify-center">

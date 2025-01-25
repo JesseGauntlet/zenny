@@ -4,6 +4,7 @@ import "./globals.css";
 import { createClient } from "@/utils/supabase/server";
 import { Sidebar } from "@/components/layout/sidebar";
 import { cn } from "@/lib/utils";
+import { redirect } from "next/navigation";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -46,6 +47,7 @@ export default async function RootLayout({
     'use server'
     const supabase = await createClient()
     await supabase.auth.signOut()
+    return redirect('/')
   }
 
   return (
