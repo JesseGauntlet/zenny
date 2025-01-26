@@ -14,6 +14,7 @@ import {
   User,
   Users2,
   BookOpen,
+  Tag,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -39,6 +40,11 @@ const baseEmployeeNav: NavItem[] = [
   { href: '/teams', label: 'Teams', icon: <Users /> },
   { href: '/knowledge', label: 'Knowledge Base', icon: <BookOpen /> },
   { href: '/settings', label: 'Settings', icon: <Settings /> },
+  {
+    href: '/admin/tags',
+    label: 'Tag Management',
+    icon: <Tag />,
+  },
 ]
 
 interface SidebarProps {

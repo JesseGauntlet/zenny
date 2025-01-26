@@ -5,6 +5,8 @@ import { createClient } from "@/utils/supabase/server";
 import { Sidebar } from "@/components/layout/sidebar";
 import { cn } from "@/lib/utils";
 import { redirect } from "next/navigation";
+import { Toaster } from "@/components/ui/toaster"
+import SupabaseProvider from "@/components/providers/supabase-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -36,9 +38,12 @@ export default async function RootLayout({
     return (
       <html lang="en" suppressHydrationWarning>
         <body className={cn('min-h-screen bg-background antialiased', inter.className)}>
-          <main className="flex-1">
-            {children}
-          </main>
+          <SupabaseProvider session={null}>
+            <main className="flex-1">
+              {children}
+            </main>
+            <Toaster />
+          </SupabaseProvider>
         </body>
       </html>
     )
@@ -63,17 +68,20 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={cn('min-h-screen bg-background antialiased', inter.className)}>
-        <div className="flex">
-          <Sidebar 
-            userRole={userRole} 
-            signOut={signOut} 
-            userEmail={user.email || ''}
-            employeeRole={employeeRole}
-          />
-          <main className="flex-1">
-            {children}
-          </main>
-        </div>
+        <SupabaseProvider session={{ user }}>
+          <div className="flex">
+            <Sidebar 
+              userRole={userRole} 
+              signOut={signOut} 
+              userEmail={user.email || ''}
+              employeeRole={employeeRole}
+            />
+            <main className="flex-1">
+              {children}
+            </main>
+          </div>
+          <Toaster />
+        </SupabaseProvider>
       </body>
     </html>
   )

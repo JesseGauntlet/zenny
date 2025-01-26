@@ -43,7 +43,7 @@
 - [x] Implement assignment dropdown in ticket UI
 
 ### Tagging System
-- [ ] Create tags and ticket_tags tables
+- [x] Create tags and ticket_tags tables
 - [ ] Add tag management UI
 - [ ] Implement tag filtering in ticket lists
 

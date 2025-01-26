@@ -9,6 +9,7 @@ import { TicketMessages } from '@/components/tickets/ticket-messages'
 import { TicketNotesPanel } from '@/components/tickets/ticket-notes-panel'
 import { InteractiveBadge } from '@/components/tickets/interactive-badge'
 import { TicketPageProps } from '@/types/tickets'
+import { TicketTags } from '@/components/tickets/ticket-tags'
 
 export default async function TicketPage({ params }: TicketPageProps) {
   // Get the ticket ID from params
@@ -190,25 +191,53 @@ export default async function TicketPage({ params }: TicketPageProps) {
         </div>
       </div>
 
-      {/* Messages Section */}
-      <div>
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-semibold">Conversation</h2>
-          {employee && (
-            <TicketNotesPanel
-              ticketId={ticket.id}
-              notes={notes}
-              currentUserId={user.id}
-            />
-          )}
+      {/* Main Content */}
+      <div className="grid gap-8 md:grid-cols-[2fr_1fr]">
+        {/* Messages Section */}
+        <div className="space-y-8">
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-semibold">Conversation</h2>
+              {employee && (
+                <TicketNotesPanel
+                  ticketId={ticket.id}
+                  notes={notes}
+                  currentUserId={user.id}
+                />
+              )}
+            </div>
+            <div className="border rounded-lg bg-background p-6">
+              <TicketMessages
+                ticketId={ticket.id}
+                messages={messages || []}
+                currentUserId={user.id}
+                userRole={employee ? 'employee' : 'customer'}
+              />
+            </div>
+          </div>
         </div>
-        <div className="border rounded-lg bg-background p-6">
-          <TicketMessages
-            ticketId={ticket.id}
-            messages={messages || []}
-            currentUserId={user.id}
-            userRole={employee ? 'employee' : 'customer'}
-          />
+
+        {/* Metadata Section */}
+        <div className="space-y-6">
+          <div className="rounded-lg border p-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium">Created</h3>
+                <p className="text-sm text-muted-foreground">
+                  {formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true })}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium">Last Updated</h3>
+                <p className="text-sm text-muted-foreground">
+                  {formatDistanceToNow(new Date(ticket.updated_at), { addSuffix: true })}
+                </p>
+              </div>
+
+              <TicketTags ticketId={ticket.id} isEmployee={!!employee} />
+            </div>
+          </div>
         </div>
       </div>
     </div>
