@@ -31,6 +31,7 @@ export interface TicketPageParams {
 export interface TicketSearchParams {
   status?: string
   priority?: string
+  tags?: string[]
 }
 
 export interface TicketPageProps {

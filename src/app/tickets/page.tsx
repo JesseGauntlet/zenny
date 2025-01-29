@@ -41,8 +41,10 @@ export default async function TicketsPage({ searchParams, params }: TicketListPa
   const userRole = user.user_metadata?.role || 'customer'
   const isEmployee = userRole === 'employee'
 
-  // Get status and priority from searchParams
+  // Get status, priority, and tags from searchParams
   const { status, priority } = await searchParams
+  const tagsParam = (await searchParams).tags as string | undefined
+  const tags = tagsParam ? tagsParam.split(',') : []
 
   // Build query with customer details for employees
   let query = supabase
@@ -60,7 +62,8 @@ export default async function TicketsPage({ searchParams, params }: TicketListPa
         name,
         role
       ),
-      ticket_tags(
+      ${tags.length > 0 ? 'ticket_tags!inner' : 'ticket_tags'}(
+        tag_id,
         tag:tags(
           id,
           name,
@@ -68,19 +71,23 @@ export default async function TicketsPage({ searchParams, params }: TicketListPa
         )
       )
     `)
-    .order('created_at', { ascending: false })
 
-  // Only filter by customer_id for customers
-  if (!isEmployee) {
-    query = query.eq('customer_id', user.id)
-  }
-
-  // Apply filters
+  // Apply filters first
   if (status) {
     query = query.eq('status', status)
   }
   if (priority) {
     query = query.eq('priority', priority)
+  }
+  if (tags.length > 0) {
+    query = query.in('ticket_tags.tag_id', tags)
+  }
+
+  // Apply ordering and customer filter last
+  query = query.order('created_at', { ascending: false })
+  
+  if (!isEmployee) {
+    query = query.eq('customer_id', user.id)
   }
 
   // Execute query
@@ -117,6 +124,7 @@ export default async function TicketsPage({ searchParams, params }: TicketListPa
       <TicketFilters
         status={status}
         priority={priority}
+        tags={tags}
       />
 
       <div className="rounded-lg border bg-card">
