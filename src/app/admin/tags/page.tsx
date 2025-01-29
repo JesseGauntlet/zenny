@@ -1,13 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Plus } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+import { Plus } from 'lucide-react'
 import { TagList } from '@/components/tags/tag-list'
 import { CreateTagDialog } from '@/components/tags/create-tag-dialog'
 import { useToast } from '@/components/ui/use-toast'
 import { useSupabase } from '@/components/providers/supabase-provider'
 import { redirect } from 'next/navigation'
+import { PageContainer } from '@/components/layout/page-container'
 
 export default function TagsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
@@ -16,11 +17,15 @@ export default function TagsPage() {
 
   // Check if user is employee, if not redirect to home
   useEffect(() => {
-    const checkAccess = async () => {
+    async function checkAccess() {
+      if (!session?.user) {
+        redirect('/auth/login')
+      }
+
       const { data: employee } = await supabase
         .from('employees')
-        .select('id')
-        .eq('id', session?.user.id)
+        .select()
+        .eq('id', session.user.id)
         .single()
 
       if (!employee) {
@@ -32,9 +37,9 @@ export default function TagsPage() {
   }, [session, supabase])
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Tag Management</h1>
+    <PageContainer>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Tag Management</h1>
         <Button onClick={() => setIsCreateOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Create Tag
@@ -47,6 +52,6 @@ export default function TagsPage() {
         open={isCreateOpen} 
         onOpenChange={setIsCreateOpen}
       />
-    </div>
+    </PageContainer>
   )
 } 

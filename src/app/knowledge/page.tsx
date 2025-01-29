@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Search } from "lucide-react"
 import Link from "next/link"
+import { PageContainer } from "@/components/layout/page-container"
 
 // Placeholder data - in real app, this would come from the database
 const categories = [
@@ -38,7 +39,7 @@ const categories = [
 
 export default function KnowledgeBasePage() {
   return (
-    <div className="p-8">
+    <PageContainer>
       {/* Header */}
       <div className="space-y-4">
         <h1 className="text-3xl font-bold">Knowledge Base</h1>
@@ -81,6 +82,6 @@ export default function KnowledgeBasePage() {
           </Card>
         ))}
       </div>
-    </div>
+    </PageContainer>
   )
 } 

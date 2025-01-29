@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import { TicketList } from '@/components/tickets/ticket-list'
 import { TicketFilters } from '@/components/tickets/ticket-filters'
 import { Button } from '@/components/ui/button'
+import { PageContainer } from '@/components/layout/page-container'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { TicketListPageProps, Ticket } from '@/types/tickets'
@@ -99,7 +100,7 @@ export default async function TicketsPage({ searchParams, params }: TicketListPa
   })) || []
 
   return (
-    <div className="container mx-auto p-6">
+    <PageContainer>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">
           {isEmployee ? 'All Tickets' : 'My Tickets'}
@@ -125,6 +126,6 @@ export default async function TicketsPage({ searchParams, params }: TicketListPa
           showAssigneeInfo={isEmployee}
         />
       </div>
-    </div>
+    </PageContainer>
   )
 } 

@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { PageContainer } from '@/components/layout/page-container'
 
 interface Employee {
   id: string
@@ -72,7 +73,7 @@ export default async function MyTeamPage() {
 
   if (!data?.team) {
     return (
-      <div className="p-8">
+      <PageContainer>
         <h1 className="text-2xl font-bold mb-6">My Team</h1>
         <Card>
           <CardHeader>
@@ -80,7 +81,7 @@ export default async function MyTeamPage() {
             <CardDescription>You are not currently assigned to any team.</CardDescription>
           </CardHeader>
         </Card>
-      </div>
+      </PageContainer>
     )
   }
 
@@ -95,7 +96,7 @@ export default async function MyTeamPage() {
   const teamMembers = team.members.map(m => m.employee)
 
   return (
-    <div className="p-8">
+    <PageContainer>
       <h1 className="text-2xl font-bold mb-6">My Team</h1>
       
       <div className="space-y-8">
@@ -130,6 +131,6 @@ export default async function MyTeamPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </PageContainer>
   )
 } 

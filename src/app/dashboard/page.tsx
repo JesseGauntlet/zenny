@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
+import { PageContainer } from '@/components/layout/page-container'
 
 export default async function Dashboard() {
   const supabase = await createClient()
@@ -6,7 +7,7 @@ export default async function Dashboard() {
   const userRole = session?.user?.user_metadata?.role || 'customer'
 
   return (
-    <div className="container mx-auto p-6">
+    <PageContainer>
       <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -47,6 +48,6 @@ export default async function Dashboard() {
           </div>
         </div>
       </div>
-    </div>
+    </PageContainer>
   )
 } 

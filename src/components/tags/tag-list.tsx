@@ -123,7 +123,7 @@ export function TagList() {
       <EditTagDialog
         tag={editingTag}
         open={!!editingTag}
-        onOpenChange={(open) => !open && setEditingTag(null)}
+        onOpenChange={(open: boolean) => !open && setEditingTag(null)}
         onSuccess={fetchTags}
       />
     </div>

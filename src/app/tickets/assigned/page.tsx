@@ -3,6 +3,7 @@ import { TicketList } from '@/components/tickets/ticket-list'
 import { TicketFilters } from '@/components/tickets/ticket-filters'
 import { redirect } from 'next/navigation'
 import { TicketListPageProps } from '@/types/tickets'
+import { PageContainer } from '@/components/layout/page-container'
 
 export default async function AssignedTicketsPage({ searchParams, params }: TicketListPageProps) {
   const supabase = await createClient()
@@ -57,7 +58,7 @@ export default async function AssignedTicketsPage({ searchParams, params }: Tick
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <PageContainer>
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold mb-1">My Assigned Tickets</h1>
@@ -78,6 +79,6 @@ export default async function AssignedTicketsPage({ searchParams, params }: Tick
           showCustomerInfo={true}
         />
       </div>
-    </div>
+    </PageContainer>
   )
 } 

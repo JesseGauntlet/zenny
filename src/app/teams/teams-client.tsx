@@ -13,6 +13,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
+import { PageContainer } from '@/components/layout/page-container'
 
 export interface Team {
   id: string
@@ -31,7 +32,7 @@ export function TeamsClient({ initialTeams }: TeamsClientProps) {
   const [teams, setTeams] = useState<Team[]>(initialTeams)
 
   return (
-    <div className="p-6">
+    <PageContainer>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Teams</h1>
         <CreateTeamDialog 
@@ -69,6 +70,6 @@ export function TeamsClient({ initialTeams }: TeamsClientProps) {
           ))}
         </TableBody>
       </Table>
-    </div>
+    </PageContainer>
   )
 } 
