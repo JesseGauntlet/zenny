@@ -2,8 +2,30 @@ import { createClient } from '@/utils/supabase/server'
 import { TicketList } from '@/components/tickets/ticket-list'
 import { TicketFilters } from '@/components/tickets/ticket-filters'
 import { redirect } from 'next/navigation'
-import { TicketListPageProps } from '@/types/tickets'
+import { TicketListPageProps, Ticket } from '@/types/tickets'
 import { PageContainer } from '@/components/layout/page-container'
+import type { Database } from '@/types/database.types'
+
+type RawTicket = Database['public']['Tables']['tickets']['Row'] & {
+  ticket_tags?: {
+    tag: {
+      id: string
+      name: string
+      color: string
+    }
+  }[]
+  customer?: {
+    id: string
+    email: string
+    name: string
+    created_at: string
+  } | null
+  assigned_to?: {
+    email: string
+    name: string
+    role: string
+  } | null
+}
 
 export default async function AssignedTicketsPage({ searchParams, params }: TicketListPageProps) {
   const supabase = await createClient()
@@ -20,8 +42,10 @@ export default async function AssignedTicketsPage({ searchParams, params }: Tick
     redirect('/tickets')
   }
 
-  // Get status and priority from searchParams
+  // Get status, priority, and tags from searchParams
   const { status, priority } = await searchParams
+  const tagsParam = (await searchParams).tags as string | undefined
+  const tags = tagsParam ? tagsParam.split(',') : []
 
   // Build query for assigned tickets
   let query = supabase
@@ -29,17 +53,26 @@ export default async function AssignedTicketsPage({ searchParams, params }: Tick
     .select(`
       *,
       customer:customers(
+        id,
         email,
-        name
+        name,
+        created_at
       ),
       assigned_to:employees(
         email,
         name,
         role
+      ),
+      ${tags.length > 0 ? 'ticket_tags!inner' : 'ticket_tags'}(
+        tag_id,
+        tag:tags(
+          id,
+          name,
+          color
+        )
       )
     `)
     .eq('assigned_employee_id', user.id)
-    .order('updated_at', { ascending: false })
 
   // Apply filters
   if (status) {
@@ -48,14 +81,28 @@ export default async function AssignedTicketsPage({ searchParams, params }: Tick
   if (priority) {
     query = query.eq('priority', priority)
   }
+  if (tags.length > 0) {
+    query = query.in('ticket_tags.tag_id', tags)
+  }
+
+  // Apply ordering last
+  query = query.order('updated_at', { ascending: false })
 
   // Execute query
-  const { data: tickets, error } = await query
+  const { data: rawTickets, error } = await query
 
   if (error) {
     console.error('Error fetching tickets:', error)
     return <div>Error loading tickets</div>
   }
+
+  // Transform the data to include tags in the expected format
+  const tickets: Ticket[] = (rawTickets as RawTicket[])?.map(ticket => ({
+    ...ticket,
+    customer: ticket.customer || null,
+    assigned_to: ticket.assigned_to || null,
+    tags: ticket.ticket_tags?.map((tt: { tag: { id: string; name: string; color: string } }) => tt.tag) || []
+  })) || []
 
   return (
     <PageContainer>
@@ -71,11 +118,12 @@ export default async function AssignedTicketsPage({ searchParams, params }: Tick
       <TicketFilters
         status={status}
         priority={priority}
+        tags={tags}
       />
 
       <div className="rounded-lg border bg-card">
         <TicketList 
-          tickets={tickets || []} 
+          tickets={tickets} 
           showCustomerInfo={true}
         />
       </div>
