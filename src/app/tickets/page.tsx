@@ -4,7 +4,29 @@ import { TicketFilters } from '@/components/tickets/ticket-filters'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { TicketListPageProps } from '@/types/tickets'
+import { TicketListPageProps, Ticket } from '@/types/tickets'
+import type { Database } from '@/types/database.types'
+
+type RawTicket = Database['public']['Tables']['tickets']['Row'] & {
+  ticket_tags?: {
+    tag: {
+      id: string
+      name: string
+      color: string
+    }
+  }[]
+  customer?: {
+    id: string
+    email: string
+    name: string
+    created_at: string
+  } | null
+  assigned_to?: {
+    email: string
+    name: string
+    role: string
+  } | null
+}
 
 export default async function TicketsPage({ searchParams, params }: TicketListPageProps) {
   const supabase = await createClient()
@@ -27,13 +49,22 @@ export default async function TicketsPage({ searchParams, params }: TicketListPa
     .select(`
       *,
       customer:customers(
+        id,
         email,
-        name
+        name,
+        created_at
       ),
       assigned_to:employees(
         email,
         name,
         role
+      ),
+      ticket_tags(
+        tag:tags(
+          id,
+          name,
+          color
+        )
       )
     `)
     .order('created_at', { ascending: false })
@@ -52,12 +83,20 @@ export default async function TicketsPage({ searchParams, params }: TicketListPa
   }
 
   // Execute query
-  const { data: tickets, error } = await query
+  const { data: rawTickets, error } = await query
 
   if (error) {
     console.error('Error fetching tickets:', error)
     return <div>Error loading tickets</div>
   }
+
+  // Transform the data to include tags in the expected format
+  const tickets: Ticket[] = (rawTickets as RawTicket[])?.map(ticket => ({
+    ...ticket,
+    customer: ticket.customer || null,
+    assigned_to: ticket.assigned_to || null,
+    tags: ticket.ticket_tags?.map((tt: { tag: { id: string; name: string; color: string } }) => tt.tag) || []
+  })) || []
 
   return (
     <div className="container mx-auto p-6">
@@ -81,7 +120,7 @@ export default async function TicketsPage({ searchParams, params }: TicketListPa
 
       <div className="rounded-lg border bg-card">
         <TicketList 
-          tickets={tickets || []} 
+          tickets={tickets} 
           showCustomerInfo={isEmployee}
           showAssigneeInfo={isEmployee}
         />

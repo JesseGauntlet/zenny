@@ -6,7 +6,17 @@ export type Ticket = Database['public']['Tables']['tickets']['Row'] & {
     email: string
     name: string
     created_at: string
-  }
+  } | null
+  assigned_to?: {
+    email: string
+    name: string
+    role: string
+  } | null
+  tags: {
+    id: string
+    name: string
+    color: string
+  }[]
 }
 
 export interface TicketListProps {

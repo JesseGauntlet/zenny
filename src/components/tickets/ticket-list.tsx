@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import type { Ticket } from '@/types/tickets'
 
 type Customer = {
   email: string
@@ -25,21 +26,10 @@ type Employee = {
   role: 'admin' | 'agent'
 }
 
-export type Ticket = {
+type Tag = {
   id: string
-  subject: string
-  description: string
-  status: 'open' | 'pending' | 'closed'
-  priority: 'low' | 'medium' | 'high'
-  customer_id: string
-  customer: Customer | null
-  assigned_employee_id?: string
-  assigned_team_id?: string
-  assigned_to?: Employee | null
-  metadata?: Record<string, any>
-  created_at: string
-  updated_at: string
-  closed_at?: string
+  name: string
+  color: string
 }
 
 interface TicketListProps {
@@ -144,6 +134,7 @@ export function TicketList({
           <SortableHeader field="priority" currentSort={sortField} direction={sortDirection} onSort={handleSort}>
             Priority
           </SortableHeader>
+          <TableHead>Tags</TableHead>
           <SortableHeader field="created_at" currentSort={sortField} direction={sortDirection} onSort={handleSort}>
             Created
           </SortableHeader>
@@ -201,6 +192,21 @@ export function TicketList({
                 {ticket.priority}
               </Badge>
             </TableCell>
+            <TableCell>
+              <div className="flex flex-wrap gap-1">
+                {ticket.tags?.map(tag => (
+                  <Badge
+                    key={tag.id}
+                    style={{
+                      backgroundColor: tag.color,
+                      color: getContrastColor(tag.color),
+                    }}
+                  >
+                    {tag.name}
+                  </Badge>
+                ))}
+              </div>
+            </TableCell>
             <TableCell className="text-muted-foreground">
               {formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true })}
             </TableCell>
@@ -222,4 +228,17 @@ export function TicketList({
       </TableBody>
     </Table>
   )
+}
+
+// Helper function to determine text color based on background color
+function getContrastColor(hexcolor: string) {
+  // Convert hex to RGB
+  const r = parseInt(hexcolor.slice(1, 3), 16)
+  const g = parseInt(hexcolor.slice(3, 5), 16)
+  const b = parseInt(hexcolor.slice(5, 7), 16)
+  
+  // Calculate relative luminance
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+  
+  return luminance > 0.5 ? '#000000' : '#ffffff'
 } 
