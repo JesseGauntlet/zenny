@@ -44,8 +44,8 @@
 
 ### Tagging System
 - [x] Create tags and ticket_tags tables
-- [ ] Add tag management UI
-- [ ] Implement tag filtering in ticket lists
+- [x] Add tag management UI
+- [x] Implement tag filtering in ticket lists
 
 ### Custom Fields
 - [ ] Add metadata JSONB column to tickets
